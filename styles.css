@@ -1,1 +1,39 @@
-/* Rion Git — 预留样式表，M0 阶段无内容。 */
+.rion-git-status {
+	cursor: pointer;
+}
+
+.rion-git-modal .rion-git-branch {
+	color: var(--text-muted);
+	margin-top: -0.4em;
+}
+
+.rion-git-file-list {
+	max-height: 50vh;
+	overflow-y: auto;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	padding: 6px 10px;
+	margin-bottom: 1em;
+}
+
+.rion-git-file-row {
+	display: flex;
+	gap: 10px;
+	padding: 2px 0;
+	font-size: var(--font-ui-small);
+}
+
+.rion-git-file-state {
+	flex: 0 0 6em;
+	color: var(--text-muted);
+}
+
+.rion-git-file-path {
+	overflow-wrap: anywhere;
+}
+
+.rion-git-modal-actions {
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+}
