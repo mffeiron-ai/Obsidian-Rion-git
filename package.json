@@ -1,6 +1,6 @@
 {
 	"name": "rion-git",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "轻量版 Obsidian Git 插件：自动备份、推送与拉取",
 	"main": "main.js",
 	"private": true,
