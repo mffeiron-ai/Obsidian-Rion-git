@@ -393,3 +393,144 @@
 .rion-git-status {
 	cursor: pointer;
 }
+/* ── 历史统计 ─────────────────────────────────────── */
+
+.rion-git-stats-view {
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow-y: auto;
+}
+
+.rion-git-stats-header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	position: sticky;
+	top: 0;
+	background: var(--background-primary);
+	z-index: 1;
+}
+
+.rion-git-stats-title {
+	font-size: var(--font-ui-small);
+	font-weight: 600;
+}
+
+.rion-git-stats-header .dropdown {
+	margin-left: auto;
+}
+
+.rion-git-stats-body {
+	padding: 12px 16px 24px;
+}
+
+.rion-git-stats-summary {
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	margin-bottom: 14px;
+}
+
+.rion-git-stats-section {
+	font-size: var(--font-ui-smaller);
+	font-weight: 600;
+	color: var(--text-muted);
+	margin: 4px 0 8px;
+}
+
+.rion-git-heatmap {
+	overflow-x: auto;
+	padding-bottom: 6px;
+	margin-bottom: 18px;
+}
+
+.rion-git-heatmap-svg {
+	display: block;
+}
+
+.rion-git-heat-cell {
+	stroke: none;
+}
+
+.rion-git-heat-cell.level-0 { fill: var(--background-modifier-border); opacity: 0.35; }
+.rion-git-heat-cell.level-1 { fill: var(--interactive-accent); opacity: 0.3; }
+.rion-git-heat-cell.level-2 { fill: var(--interactive-accent); opacity: 0.5; }
+.rion-git-heat-cell.level-3 { fill: var(--interactive-accent); opacity: 0.75; }
+.rion-git-heat-cell.level-4 { fill: var(--interactive-accent); opacity: 1; }
+
+.rion-git-heatmap-label,
+.rion-git-heatmap-month,
+.rion-git-axis-label {
+	font-size: 10px;
+	fill: var(--text-faint);
+}
+
+.rion-git-heatmap-legend {
+	display: flex;
+	align-items: center;
+	gap: 3px;
+	margin-top: 8px;
+	font-size: 10px;
+	color: var(--text-faint);
+}
+
+.rion-git-heatmap-legend .rion-git-heat-cell {
+	display: inline-block;
+	width: 11px;
+	height: 11px;
+	border-radius: 2px;
+	opacity: 1;
+}
+
+.rion-git-heatmap-legend .rion-git-heat-cell.level-0 { background: var(--background-modifier-border); opacity: 0.35; }
+.rion-git-heatmap-legend .rion-git-heat-cell.level-1 { background: var(--interactive-accent); opacity: 0.3; }
+.rion-git-heatmap-legend .rion-git-heat-cell.level-2 { background: var(--interactive-accent); opacity: 0.5; }
+.rion-git-heatmap-legend .rion-git-heat-cell.level-3 { background: var(--interactive-accent); opacity: 0.75; }
+.rion-git-heatmap-legend .rion-git-heat-cell.level-4 { background: var(--interactive-accent); opacity: 1; }
+
+.rion-git-line-chart {
+	margin-bottom: 8px;
+}
+
+.rion-git-line-svg {
+	width: 100%;
+	height: auto;
+	display: block;
+}
+
+.rion-git-grid-line {
+	stroke: var(--background-modifier-border);
+	stroke-width: 1;
+}
+
+.rion-git-line-series {
+	fill: none;
+	stroke-width: 2;
+	stroke-linejoin: round;
+	stroke-linecap: round;
+}
+
+.rion-git-line-series.series-lines { stroke: var(--interactive-accent); }
+.rion-git-line-series.series-files { stroke: #3ba55c; }
+
+.rion-git-chart-legend {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 11px;
+	color: var(--text-muted);
+	margin-top: 4px;
+}
+
+.rion-git-chart-legend .dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	display: inline-block;
+}
+
+.rion-git-chart-legend .dot.series-lines { background: var(--interactive-accent); }
+.rion-git-chart-legend .dot.series-files { background: #3ba55c; }

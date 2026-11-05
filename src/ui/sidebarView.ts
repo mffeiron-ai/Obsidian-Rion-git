@@ -263,6 +263,11 @@ export class RionGitView extends ItemView {
 				{ icon: "download", label: "拉取", action: () => void this.plugin.pull() },
 				{ icon: "upload", label: "推送", action: () => void this.plugin.push() },
 				{
+					icon: "activity",
+					label: "历史统计",
+					action: () => void this.plugin.openStatsView(),
+				},
+				{
 					icon: "refresh-cw",
 					label: "刷新历史",
 					action: () => void this.plugin.refresh(),

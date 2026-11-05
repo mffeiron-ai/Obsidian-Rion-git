@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Rion Git — 历史统计预览</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>
+:root {
+	--background-primary: #1e1e1e;
+	--background-primary-alt: #1a1a1a;
+	--background-secondary: #161616;
+	--background-modifier-border: #333333;
+	--background-modifier-hover: rgba(255, 255, 255, 0.075);
+	--text-normal: #dadada;
+	--text-muted: #999999;
+	--text-faint: #666666;
+	--text-accent: hsl(254, 80%, 68%);
+	--text-error: #e93147;
+	--text-on-accent: #ffffff;
+	--interactive-accent: hsl(254, 80%, 68%);
+	--font-interface: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+		"Microsoft YaHei", sans-serif;
+	--font-monospace: "JetBrains Mono", "Cascadia Code", Consolas,
+		"Microsoft YaHei", monospace;
+	--font-ui-small: 13px;
+	--font-ui-smaller: 12px;
+	--radius-s: 4px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+	margin: 0;
+	padding: 0;
+	background: var(--background-secondary);
+}
+
+body {
+	font-family: var(--font-interface);
+	font-size: 14px;
+	color: var(--text-normal);
+}
+
+.shell {
+	width: 900px;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+}
+
+button {
+	font-family: inherit;
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+	background: var(--background-modifier-hover);
+	border: none;
+	border-radius: var(--radius-s);
+	padding: 0 12px;
+	height: 28px;
+	cursor: pointer;
+}
+button.clickable-icon {
+	background: transparent;
+	height: auto;
+	padding: 2px;
+	color: var(--text-muted);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+select.dropdown {
+	font-family: inherit;
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+	background: var(--background-primary-alt);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	height: 26px;
+	padding: 0 6px;
+}
+svg.svg-icon {
+	width: 16px;
+	height: 16px;
+	stroke: currentColor;
+	fill: none;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+</style>
+</head>
+<body>
+<div class="shell">
+	<div id="root"></div>
+</div>
+<script src="./stats-preview.js"></script>
+</body>
+</html>

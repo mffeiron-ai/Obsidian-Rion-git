@@ -16,6 +16,7 @@ Desktop only. It drives the Git you already have installed.
 | Diff view | Click a file to open its diff in an **editor tab**, side by side with your notes |
 | Per-file actions | Hover a file row to reveal "commit this file" and "discard changes" |
 | History | Latest 30 commits; expand one to list its files, click a file to see that commit's diff |
+| History stats | Commit calendar heatmap plus a weekly trend chart (lines and file count, dual axis) |
 | Push / pull | One click, with automatic upstream setup on first push |
 | Smart auto-commit | Commits when changes reach a file-count or line-count threshold |
 | Status bar | Always-visible change count and operation state; click to open the panel |
@@ -62,6 +63,16 @@ The message box clears on success while keeping focus, so you can keep going.
 - Click any entry under "History" to expand the list of files it touched
 - Click a file there to see that commit's diff for it
 - The pill on the right shows where a ref points, e.g. `HEAD -> main`, `origin/main`
+
+### History stats
+
+Click the 📈 icon at the right end of the "History" header, or run "Rion Git: Open history stats" from the command palette.
+
+![History stats](./docs/stats.png)
+
+- **Commit calendar**: GitHub-style heatmap, one cell per day, darker means more commits that day (hover for details)
+- **Trend**: two lines aggregated by week — purple is committed lines (left axis), green is committed file count (right axis)
+- Range selector in the top right: last 13 / 26 / 52 weeks
 
 ### Push and pull
 

@@ -10,6 +10,8 @@ import {
 } from "./git/diff";
 import type { DiffLine } from "./git/diff";
 import { GitQueue } from "./git/exec";
+import { readCommitStats } from "./git/history";
+import type { CommitStat } from "./git/history";
 import { readCommitFiles, readLog } from "./git/log";
 import {
 	commitAll as gitCommitAll,
@@ -34,6 +36,7 @@ import { ChangesModal } from "./ui/changesModal";
 import { ConfirmModal } from "./ui/confirmModal";
 import { DiffView, VIEW_TYPE_RION_GIT_DIFF } from "./ui/diffView";
 import { RionGitView, VIEW_TYPE_RION_GIT } from "./ui/sidebarView";
+import { StatsView, VIEW_TYPE_RION_GIT_STATS } from "./ui/statsView";
 import { GitStatusBar } from "./ui/statusBar";
 import { VaultWatcher } from "./vaultWatcher";
 
@@ -67,6 +70,10 @@ export default class RionGitPlugin extends Plugin {
 		this.registerView(
 			VIEW_TYPE_RION_GIT_DIFF,
 			(leaf) => new DiffView(leaf, this)
+		);
+		this.registerView(
+			VIEW_TYPE_RION_GIT_STATS,
+			(leaf) => new StatsView(leaf, this)
 		);
 
 		this.addSettingTab(new RionGitSettingTab(this.app, this));
@@ -107,6 +114,7 @@ export default class RionGitPlugin extends Plugin {
 		this.watcher?.dispose();
 		this.app.workspace.detachLeavesOfType(VIEW_TYPE_RION_GIT);
 		this.app.workspace.detachLeavesOfType(VIEW_TYPE_RION_GIT_DIFF);
+		this.app.workspace.detachLeavesOfType(VIEW_TYPE_RION_GIT_STATS);
 	}
 
 	private get ctx(): GitContext {
@@ -170,6 +178,23 @@ export default class RionGitPlugin extends Plugin {
 
 	async loadCommitFiles(hash: string): Promise<CommitFile[]> {
 		return this.queue.add(() => readCommitFiles(this.ctx, hash));
+	}
+
+	async loadHistoryStats(): Promise<CommitStat[]> {
+		return this.queue.add(() => readCommitStats(this.ctx));
+	}
+
+	async openStatsView(): Promise<void> {
+		const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_RION_GIT_STATS);
+		const first = existing[0];
+		if (first) {
+			await this.app.workspace.revealLeaf(first);
+			return;
+		}
+
+		const leaf = this.app.workspace.getLeaf("tab");
+		await leaf.setViewState({ type: VIEW_TYPE_RION_GIT_STATS, active: true });
+		await this.app.workspace.revealLeaf(leaf);
 	}
 
 	async commitAll(): Promise<boolean> {

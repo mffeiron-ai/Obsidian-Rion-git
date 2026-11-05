@@ -32,6 +32,12 @@ export function registerCommands(plugin: RionGitPlugin): void {
 	});
 
 	plugin.addCommand({
+		id: "history-stats",
+		name: "打开历史统计",
+		callback: () => void plugin.openStatsView(),
+	});
+
+	plugin.addCommand({
 		id: "show-changes",
 		name: "查看改动",
 		callback: () => void plugin.showChanges(),

@@ -22,3 +22,27 @@ $root = "D:\PlanAndLife\Enginer\Obsidian-Rion-git"
 ```
 
 `--force-device-scale-factor=2` 即 2 倍图。两次截图使用不同的 `--user-data-dir`，否则第二次可能复用已运行的实例而不会重新落盘。
+
+## 历史统计预览
+
+`stats.png` 更进一步：`stats-preview.ts` 在浏览器里**直接运行 `src/ui/statsView.ts` 的渲染代码**，只把 `obsidian` 模块换成 `obsidian-stub.ts`（提供最小 `ItemView`、`setIcon`，以及 Obsidian 注入到 `HTMLElement` 上的 `createEl` / `empty` / `addClass`）。数据是按固定种子生成的样例。
+
+```powershell
+$root = "D:\PlanAndLife\Enginer\Obsidian-Rion-git"
+Set-Location $root
+
+# 1. 打包预览脚本（把 obsidian 换成替身）
+& ".\node_modules\.bin\esbuild.cmd" docs/preview/stats-preview.ts --bundle `
+  --format=esm --platform=browser --target=es2020 `
+  --alias:obsidian=./docs/preview/obsidian-stub.ts `
+  --outfile=docs/preview/stats-preview.js
+
+# 2. 截图
+$chrome = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+& $chrome --headless=new --disable-gpu --hide-scrollbars --no-first-run `
+  --user-data-dir="$env:TEMP\rion-shot-stats" --force-device-scale-factor=2 `
+  --window-size=900,700 --screenshot="$root\docs\stats.png" `
+  "file:///$($root.Replace('\','/'))/docs/preview/stats.html"
+```
+
+`docs/preview/*.js` 是构建产物，已在 `.gitignore` 中忽略。
