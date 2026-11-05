@@ -1,6 +1,8 @@
-import type { GitContext, OpResult } from "../types";
+import { promises as fs } from "node:fs";
+import path from "node:path";
+import type { FileChange, GitContext, OpResult } from "../types";
 import { firstLine, runGit } from "./exec";
-import { readStatus } from "./status";
+import { isConflict, readStatus } from "./status";
 
 const NETWORK_TIMEOUT_MS = 120_000;
 
@@ -81,4 +83,75 @@ export async function initRepo(ctx: GitContext): Promise<OpResult> {
 	const res = await runGit(ctx.cwd, ctx.gitPath, ["init"]);
 	if (res.code !== 0) return fail(res);
 	return { ok: true, message: "已初始化 git 仓库。" };
+}
+
+/** 只提交指定文件：先把这个文件（含删除）放进索引，再按路径提交。 */
+export async function commitFile(
+	ctx: GitContext,
+	filePath: string,
+	message: string
+): Promise<OpResult> {
+	const add = await runGit(ctx.cwd, ctx.gitPath, ["add", "-A", "--", filePath]);
+	if (add.code !== 0) return fail(add);
+
+	const commit = await runGit(ctx.cwd, ctx.gitPath, [
+		"commit",
+		"-m",
+		message,
+		"--",
+		filePath,
+	]);
+	if (commit.code !== 0) return fail(commit);
+
+	return { ok: true, message: `已提交 ${filePath}` };
+}
+
+/** 撤销单个文件的改动；未跟踪文件直接删除。 */
+export async function discardFile(
+	ctx: GitContext,
+	change: FileChange
+): Promise<OpResult> {
+	if (isConflict(change)) {
+		return { ok: false, message: "冲突文件不支持一键撤销，请手动解决。" };
+	}
+
+	if (change.index === "?" && change.worktree === "?") {
+		const fullPath = path.join(ctx.cwd, ...change.path.split("/"));
+		try {
+			await fs.unlink(fullPath);
+			return { ok: true, message: `已删除未跟踪文件 ${change.path}` };
+		} catch (error) {
+			return {
+				ok: false,
+				message: `删除失败：${(error as Error).message}`,
+			};
+		}
+	}
+
+	const restore = await runGit(ctx.cwd, ctx.gitPath, [
+		"restore",
+		"--source=HEAD",
+		"--staged",
+		"--worktree",
+		"--",
+		change.path,
+	]);
+	if (restore.code === 0) {
+		const message =
+			change.index === "A"
+				? `已撤销新增文件 ${change.path}`
+				: `已撤销 ${change.path} 的修改`;
+		return { ok: true, message };
+	}
+
+	// 新增到索引但 HEAD 里没有的文件，restore 会失败，退化为取消暂存。
+	const reset = await runGit(ctx.cwd, ctx.gitPath, ["reset", "-q", "--", change.path]);
+	if (reset.code === 0) {
+		return {
+			ok: true,
+			message: `已取消暂存 ${change.path}（工作区内容已保留）`,
+		};
+	}
+
+	return fail(restore);
 }

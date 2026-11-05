@@ -25,6 +25,11 @@ function copyAssets() {
 	console.log(`[rion-git] 已同步资源文件到 ${pluginDir}`);
 }
 
+const nodeBuiltins = [
+	...builtinModules,
+	...builtinModules.map((name) => `node:${name}`),
+];
+
 const context = await esbuild.context({
 	banner: {
 		js: "/* Rion Git — 由 esbuild 生成的产物，请勿直接编辑。 */",
@@ -45,7 +50,7 @@ const context = await esbuild.context({
 		"@lezer/common",
 		"@lezer/highlight",
 		"@lezer/lr",
-		...builtinModules,
+		...nodeBuiltins,
 	],
 	format: "cjs",
 	target: "es2018",

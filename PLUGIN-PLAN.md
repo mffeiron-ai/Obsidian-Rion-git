@@ -289,7 +289,7 @@ stateDiagram-v2
     Pushing --> Idle
 ```
 
-> **决策记录**：最初方案包含「文件变更后自动提交（vault 事件 + debounce）」，实现后评估移除 —— 定时提交已覆盖备份需求，事件监听只会带来噪音提交和额外开销。因此插件**不注册任何 vault 变更事件**。
+> **决策记录**：最初方案包含「文件变更后自动提交（vault 事件 + debounce）」，实现后评估移除 —— 定时提交已覆盖备份需求，事件监听用于提交只会带来噪音提交和额外开销。**提交仍然只由定时器触发**。但 vault 事件保留用于「界面及时刷新」（见 `vaultWatcher.ts`），否则改动后要手动刷新才能看到。
 
 规则：
 
@@ -303,7 +303,7 @@ stateDiagram-v2
 
 5. **失败退避**：本地提交失败（如 identity 未配置）后进入 5 分钟冷却并提示一次，避免刷屏。
 
-6. **状态新鲜度**：由于不监听文件事件，边栏面板打开时每 30 秒轮询一次 `status`（面板关闭则跳过），用户也可随时点刷新图标。
+6. **界面及时刷新**：`vaultWatcher.ts` 监听 `modify`/`create`/`delete`/`rename`，过滤 `.git/`、`.trash/`、`.obsidian/plugins/`、`workspace*.json` 后 debounce 700ms，只调用 `refreshStatusOnly()`（不读历史、不提交）。另保留 30 秒轮询作为「从终端操作 git」时的兜底。
 
 ### 5.7 `src/git/ops.ts` — 操作组合
 
@@ -356,7 +356,13 @@ sequenceDiagram
 
 **Ribbon**：一个图标，`onClick` 打开变更弹窗（菜单式：提交 / 推送 / 拉取 / 查看改动）。
 
-**变更弹窗**（`changesModal.ts`）：只读列表（路径 + 状态字符 + 中文状态标签），底部三个按钮：提交全部 / 推送 / 拉取。逐文件 stage 留到 v2。
+**历史提交**：每条只显示「圆点 + 提交消息 + 分支标签」（不展示哈希/作者/日期，保持清爽）。点击展开该提交的文件列表；点击其中任一文件，在标签页查看 `git show <hash> -- <path>` 的差异。
+
+**变更弹窗**（`changesModal.ts`）：只读列表（路径 + 状态字符 + 中文状态标签），底部三个按钮：提交全部 / 推送 / 拉取。
+
+**单文件操作**（侧边栏）：文件行 hover 出现两个图标——提交此文件（`git add -A -- <path>` + `git commit -m <msg> -- <path>`）、撤销修改（`git restore --source=HEAD --staged --worktree`；未跟踪文件直接删除）。撤销前弹确认框。
+
+**diff 预览**（`diffView.ts` + `git/diff.ts`）：点击文件行在**编辑区新标签页**打开自定义视图（不做弹窗），标题栏显示路径与 `+N -M`，右侧三个图标：重新读取 / 提交此文件 / 撤销修改。数据来自 `git diff --no-color --unified=3 HEAD -- <path>`，按行首字符着色（`+` 绿 / `-` 红 / `@@` 高亮）；未跟踪文件按「整篇新增」渲染，超过 2MB 或含 NUL 字节时给出提示而非硬渲染。所有 git 调用都带 `-c core.quotepath=false`，避免中文路径被输出成八进制转义。
 
 **通知**：成功用 `new Notice("已提交 3 个文件")`，静默成功（自动提交）不用 Notice，只更新状态栏，避免打扰。
 
@@ -452,7 +458,7 @@ sequenceDiagram
 |---|---|---|
 | 移动端支持 | 高 | 需引入 `isomorphic-git` + FS polyfill + 自建 token 存储；`ops.ts` 抽象已在，理论上只需替换 `exec.ts` 实现 |
 | 行内署名 / gutter 标记 | 中高 | 依赖 CodeMirror 扩展 + 逐行 blame 缓存，obsidian-git 里占了 `src/editor/` 整个目录 |
-| hunk 级 stage/discard | 中 | 需要 diff 解析 + 编辑器内按钮 |
+| hunk 级 stage/discard | 中 | 已有整文件 diff 预览与整文件 stage/discard，hunk 级需要在编辑器内做按钮 |
 | 历史 / 图谱视图 | 中 | 需要 UI 框架（Svelte / 原生 DOM） |
 | 多仓库 | 低中 | 设置里加仓库列表 + 命令加 target 参数 |
 

@@ -21,7 +21,8 @@ export function runGit(
 	return new Promise((resolve) => {
 		execFile(
 			gitPath,
-			args,
+			// quotepath=false：否则中文/空格路径会被输出成 "\346\225\264..." 这样的八进制转义。
+			["-c", "core.quotepath=false", ...args],
 			{
 				cwd,
 				timeout: options.timeoutMs ?? 30_000,

@@ -219,7 +219,11 @@ export class RionGitView extends ItemView {
 		}
 
 		for (const file of files.slice(0, MAX_ROWS)) {
-			this.renderFileRow(body, changeBadge(file), file.path, statusLabel(file));
+			this.renderFileRow(body, changeBadge(file), file.path, statusLabel(file), {
+				onOpen: () => void this.plugin.showDiff(file),
+				onCommit: () => void this.plugin.commitFile(file.path),
+				onDiscard: () => void this.plugin.discardFile(file),
+			});
 		}
 
 		if (files.length > MAX_ROWS) {
@@ -264,18 +268,14 @@ export class RionGitView extends ItemView {
 		const head = item.createEl("div", { cls: "rion-git-commit-head" });
 		head.createEl("span", { cls: "rion-git-commit-dot" });
 
-		const text = head.createEl("div", { cls: "rion-git-commit-text" });
-		const subject = text.createEl("div", { cls: "rion-git-commit-subject" });
-		subject.setText(entry.subject);
+		const subject = head.createEl("span", {
+			cls: "rion-git-commit-subject",
+			text: entry.subject,
+		});
 		subject.setAttribute("title", entry.subject);
 
-		const meta = text.createEl("div", { cls: "rion-git-commit-meta" });
-		meta.createEl("span", { text: entry.shortHash });
-		meta.createEl("span", { text: entry.author });
-		meta.createEl("span", { text: entry.date });
-
 		if (entry.refs.length > 0) {
-			const refs = text.createEl("div", { cls: "rion-git-refs" });
+			const refs = head.createEl("span", { cls: "rion-git-refs" });
 			for (const ref of entry.refs) {
 				refs.createEl("span", { cls: "rion-git-ref", text: ref });
 			}
@@ -283,18 +283,24 @@ export class RionGitView extends ItemView {
 
 		head.onclick = () => void this.toggleCommit(entry.hash);
 
-		if (expanded) {
-			const files = this.commitFiles.get(entry.hash);
-			const filesEl = item.createEl("div", { cls: "rion-git-commit-files" });
-			if (!files) {
-				filesEl.createEl("div", { cls: "rion-git-empty", text: "读取中…" });
-			} else if (files.length === 0) {
-				filesEl.createEl("div", { cls: "rion-git-empty", text: "没有文件变更。" });
-			} else {
-				for (const file of files) {
-					this.renderFileRow(filesEl, file.status, file.path, file.status);
-				}
-			}
+		if (!expanded) return;
+
+		const files = this.commitFiles.get(entry.hash);
+		const filesEl = item.createEl("div", { cls: "rion-git-commit-files" });
+
+		if (!files) {
+			filesEl.createEl("div", { cls: "rion-git-empty", text: "读取中…" });
+			return;
+		}
+		if (files.length === 0) {
+			filesEl.createEl("div", { cls: "rion-git-empty", text: "没有文件变更。" });
+			return;
+		}
+
+		for (const file of files) {
+			this.renderFileRow(filesEl, file.status, file.path, file.status, {
+				onOpen: () => void this.plugin.showCommitDiff(entry.hash, file.path),
+			});
 		}
 	}
 
@@ -318,14 +324,40 @@ export class RionGitView extends ItemView {
 		parent: HTMLElement,
 		badge: string,
 		path: string,
-		tooltip: string
+		tooltip: string,
+		actions?: { onOpen: () => void; onCommit?: () => void; onDiscard?: () => void }
 	): void {
 		const { name, dir } = splitPath(path);
 		const row = parent.createEl("div", { cls: "rion-git-file-row" });
 		row.setAttribute("title", tooltip);
 		row.createEl("span", { cls: `rion-git-file-badge mod-${badge}`, text: badge });
 		row.createEl("span", { cls: "rion-git-file-name", text: name });
-		if (dir) row.createEl("span", { cls: "rion-git-file-dir", text: dir });
+
+		const end = row.createEl("div", { cls: "rion-git-file-end" });
+		if (dir) end.createEl("span", { cls: "rion-git-file-dir", text: dir });
+
+		if (!actions) return;
+
+		row.addClass("is-clickable");
+		row.onclick = () => actions.onOpen();
+
+		if (!actions.onCommit && !actions.onDiscard) return;
+
+		const buttons = end.createEl("div", { cls: "rion-git-file-actions" });
+		const addIcon = (icon: string, label: string, handler?: () => void): void => {
+			if (!handler) return;
+			const button = buttons.createEl("button", { cls: "clickable-icon" });
+			button.setAttribute("aria-label", label);
+			button.setAttribute("title", label);
+			setIcon(button, icon);
+			button.onclick = (evt) => {
+				evt.preventDefault();
+				evt.stopPropagation();
+				handler();
+			};
+		};
+		addIcon("check", "提交此文件", actions.onCommit);
+		addIcon("rotate-ccw", "撤销修改", actions.onDiscard);
 	}
 
 	private createSection(
