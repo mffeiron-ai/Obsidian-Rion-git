@@ -9,7 +9,8 @@
 |---|---|---|
 | 平台范围 | **仅桌面端** | `manifest.json` 中 `isDesktopOnly: true` |
 | Git 内核 | **调用系统 `git` CLI** | `child_process.execFile`，不引入 `isomorphic-git` |
-| 功能范围 | 手动 commit/push/pull、自动提交、自动推送、状态栏 + Ribbon、变更文件弹窗、冲突处理 | 全量 MVP |
+| 功能范围 | 手动 commit/push/pull、定时自动提交、自动推送、状态栏 + Ribbon、变更文件弹窗、冲突处理 | 全量 MVP |
+| 自动提交触发方式 | **仅定时**（不做文件变更触发） | 变更监听会造成噪音提交与额外开销，已移除，见 §5.6 |
 | 不做的部分 | 行内作者标注、hunk 级 stage/diff、历史图谱、多仓库、移动端 | 见 §11 |
 
 ---
@@ -81,8 +82,6 @@ graph TB
 
     subgraph Auto["src/autoCommit.ts"]
         T[定时器]
-        E[vault 事件 + debounce]
-        F[路径过滤]
     end
 
     subgraph UI["src/ui"]
@@ -91,8 +90,8 @@ graph TB
         CF[conflictModal.ts]
     end
 
-    L --> T & E & SB
-    T & E --> F --> OP
+    L --> T & SB
+    T --> OP
     OP --> Q
     ST --> Q
     R --> Q
@@ -279,44 +278,32 @@ export interface RepoStatus {
 - ahead/behind 用 `git rev-list --left-right --count HEAD...@{upstream}`（无 upstream 时跳过，不要报错）。
 - 变更文件数超过 `MAX_LIST`（如 500）时，弹窗只显示前 100 条 + 「还有 N 个文件」，避免 UI 卡死。
 
-### 5.6 `src/autoCommit.ts` — 自动备份状态机
+### 5.6 `src/autoCommit.ts` — 定时自动提交
 
 ```mermaid
 stateDiagram-v2
     [*] --> Idle
-    Idle --> Dirty: vault modify/create/delete/rename（路径通过过滤）
-    Dirty --> Dirty: 继续有变更（重置 debounce）
-    Dirty --> Pending: debounce 到期（5s）
-    Pending --> Committing: 距上次提交 > minInterval
-    Pending --> Idle: 未到最小间隔（保留 dirty 标记）
-    Committing --> Pushing: 自动推送开启
+    Idle --> Committing: 定时器触发（autoCommitInterval 分钟）
+    Committing --> Pushing: 有改动且开启自动推送
     Committing --> Idle: 无改动则跳过
     Pushing --> Idle
 ```
 
+> **决策记录**：最初方案包含「文件变更后自动提交（vault 事件 + debounce）」，实现后评估移除 —— 定时提交已覆盖备份需求，事件监听只会带来噪音提交和额外开销。因此插件**不注册任何 vault 变更事件**。
+
 规则：
 
-1. **事件过滤**（第一行就做，成本最低收益最大）：
-   ```ts
-   private isRelevant(path: string): boolean {
-       if (path.startsWith(".git/")) return false;                  // 防自激循环
-       if (path.startsWith(".obsidian/plugins/rion-git/")) return false; // 自身产物
-       if (path.endsWith(".obsidian/workspace.json")) return false;
-       if (path.startsWith(".trash/")) return false;
-       return !this.settings.ignoreGlobs.some(g => globMatch(g, path));
-   }
-   ```
-   `.git/` 下每次 git 操作都会产生大批文件事件，不过滤会造成「提交 → 事件 → 提交」死循环，并显著拖慢 Obsidian 索引。
+1. **唯一触发器是定时器**，通过 `registerInterval` 注册；设置变化时先 `clearInterval` 再重建，避免热重载后多份定时器叠加。
 
-2. **debounce**：`modify` 事件在一次输入中会触发几十次，必须等 3–5 秒静默后再提交。
+2. **总开关**：`autoCommitEnabled` 为 false 或 `autoCommitInterval <= 0` 时不注册定时器。
 
-3. **最小间隔**：`autoCommitInterval`（分钟）不为 0 时作为节流上限；为 0 表示「只在定时器触发时提交」。两种模式共存：事件负责「及时」，定时器负责「兜底」。
+3. **空提交跳过**：执行前先跑 `status`，无改动直接返回，**不要**用 `--allow-empty`。
 
-4. **空提交跳过**：执行前先跑 `status`，`changedCount === 0` 直接返回，**不要**用 `--allow-empty`。
+4. **消息模板**：默认 `vault backup: {{date}}`。日期格式化用自带的小函数而非 Obsidian 的 `moment`（后者的类型是命名空间对象，`typeof moment` 不可调用）。
 
-5. **消息模板**：默认 `vault backup: {{date}}`，`{{date}}` 用 Obsidian 自带的 `moment()` 按用户设置格式化（跟随 App 语言/区域）。
+5. **失败退避**：本地提交失败（如 identity 未配置）后进入 5 分钟冷却并提示一次，避免刷屏。
 
-6. **失败退避**：本地提交失败（如 identity 未配置）时停止自动提交并提示，不要每分钟重试刷屏。
+6. **状态新鲜度**：由于不监听文件事件，边栏面板打开时每 30 秒轮询一次 `status`（面板关闭则跳过），用户也可随时点刷新图标。
 
 ### 5.7 `src/git/ops.ts` — 操作组合
 
@@ -378,16 +365,11 @@ sequenceDiagram
 | key | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `gitPath` | string | `"git"` | 从桌面图标启动时 PATH 可能不含 git |
+| `commitMessageTemplate` | string | `vault backup: {{date}}` | 支持 `{{date}}` |
+| `showStatusBar` | boolean | `true` | 是否显示底部状态栏 |
+| `autoCommitEnabled` | boolean | `true` | 自动提交总开关 |
 | `autoCommitInterval` | number(min) | `10` | 0 = 关闭定时提交 |
-| `autoCommitOnChange` | boolean | `true` | 文件变更后自动提交 |
-| `changeDebounceSeconds` | number(s) | `5` | 静默多久后提交 |
-| `commitMessageTemplate` | string | `vault backup: {{date}}` | 支持 `{{date}}`、`{{hostname}}`、`{{files}}` |
-| `dateFormat` | string | `YYYY-MM-DD HH:mm:ss` | moment 格式 |
 | `autoPush` | boolean | `false` | 自动提交后推送 |
-| `pullBeforePush` | boolean | `false` | 推送前先拉取 |
-| `ignoreGlobs` | string[] | `[".obsidian/workspace.json", ".obsidian/workspace-mobile.json", ".trash/**"]` | 不触发自动提交 |
-| `showStatusBar` | boolean | `true` | |
-| `confirmBeforeDestructive` | boolean | `true` | 冲突解决/丢弃前确认 |
 
 ---
 
@@ -400,7 +382,7 @@ sequenceDiagram
 | 1 | GUI 里 git 无 TTY，push 卡死在密码提示 | `GIT_TERMINAL_PROMPT=0` + `timeout`；文案引导用户先在终端配好 credential helper / SSH key |
 | 2 | 从快捷方式启动的 Obsidian，PATH 里没有 git | 设置项 `gitPath`；启动时 `--version` 探测；`ENOENT` 单独给提示 |
 | 3 | 仓库未配 `user.name/user.email`，commit 必失败 | 启动即检测并提示配置命令 |
-| 4 | `.git/` 事件导致自激循环 | 事件过滤 `.git/` 前缀（§5.6） |
+| 4 | vault 事件监听造成「提交 → 事件 → 提交」自激循环 | 不监听 vault 事件，只用定时器；`.git/` 等路径本就不在版本控制内 |
 | 5 | `workspace.json` 每次开关都变，制造噪音提交 | 默认忽略 + 默认 `.gitignore` |
 | 6 | 大附件把仓库撑爆 | 设置项忽略附件目录 + 文档提示 Git LFS |
 | 7 | 并发导致 `index.lock` | 所有调用走单一串行队列 |
@@ -418,7 +400,7 @@ sequenceDiagram
 |---|---|---|
 | **M0** 脚手架 | `manifest.json` / `package.json` / `esbuild.config.mjs` / `main.ts`（`onload` 打 Notice） | 构建产物放进 `.obsidian/plugins/rion-git/` 后能被启用，控制台无报错 |
 | **M1** 内核 | `exec.ts` + `repo.ts` + `status.ts` + `ops.ts`；命令：提交全部 / 推送 / 拉取 | 命令面板逐个执行，`git log`、`git status` 结果与预期一致 |
-| **M2** 自动化 | `autoCommit.ts`（事件 + debounce + 定时 + 过滤）+ 设置页 | 改一个 md 等 5s 出现提交；关掉开关后不再提交 |
+| **M2** 自动化 | `autoCommit.ts`（定时提交 + 总开关）+ 设置页 | 把间隔设为 1 分钟，改一个文件后等待，出现提交；关掉开关后不再提交 |
 | **M3** 界面 | 状态栏 + Ribbon + 变更弹窗 | 状态随时间/操作正确变化；点状态栏能推送 |
 | **M4** 冲突与健壮性 | 冲突弹窗、错误文案、冷却期、空提交跳过 | 手动制造冲突 → 选择「用本地」后仓库干净 |
 | **M5** 打磨 | 操作日志（可导出）、脱敏、README、发布脚本 | 全量手动回归清单通过 |
@@ -478,7 +460,7 @@ sequenceDiagram
 
 ## 12. 与 obsidian-git 的取舍总结
 
-**借鉴**：`GitManager` 抽象 + 串行队列、`status --porcelain` 的解析方式、状态栏状态机、vault 事件过滤策略、设置项命名。
+**借鉴**：`GitManager` 抽象 + 串行队列、`status --porcelain` 的解析方式、状态栏状态机、`registerInterval` 的生命周期管理、设置项命名。
 
 **不借鉴**：Svelte UI 层、CodeMirror 行内标注与 hunk 操作、双内核（`simpleGit` + `isomorphicGit`）的 adapter 体系、Svelte 分层 diff 视图 —— 这些都是为「覆盖移动端 + IDE 级体验」付出的成本，MVP 阶段全是负担。
 

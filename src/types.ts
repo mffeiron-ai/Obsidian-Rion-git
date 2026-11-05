@@ -20,3 +20,18 @@ export interface OpResult {
 	ok: boolean;
 	message: string;
 }
+
+export interface LogEntry {
+	hash: string;
+	shortHash: string;
+	author: string;
+	date: string;
+	subject: string;
+	refs: string[];
+}
+
+export interface CommitFile {
+	status: string;
+	path: string;
+	from?: string;
+}

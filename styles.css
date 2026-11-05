@@ -1,39 +1,284 @@
-.rion-git-status {
-	cursor: pointer;
+/* ── 侧边栏 ───────────────────────────────────────── */
+
+.rion-git-sidebar {
+	padding: 8px 10px 16px;
+	overflow-y: auto;
 }
+
+.rion-git-error {
+	color: var(--text-error);
+	font-size: var(--font-ui-smaller);
+	background: var(--background-modifier-error);
+	border-radius: var(--radius-s);
+	padding: 6px 8px;
+	margin-bottom: 8px;
+}
+
+/* 提交框 */
+
+.rion-git-commit-box {
+	margin-bottom: 12px;
+}
+
+.rion-git-message {
+	width: 100%;
+	min-height: 56px;
+	resize: vertical;
+	font-family: var(--font-interface);
+	font-size: var(--font-ui-small);
+	border-radius: var(--radius-s);
+	padding: 6px 8px;
+}
+
+.rion-git-auto-hint {
+	font-size: 11px;
+	color: var(--text-faint);
+	margin-top: 4px;
+}
+
+.rion-git-commit-actions {
+	display: flex;
+	gap: 4px;
+	margin-top: 6px;
+}
+
+.rion-git-commit-btn {
+	flex: 1 1 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+}
+
+.rion-git-btn-icon {
+	display: inline-flex;
+	align-items: center;
+}
+
+.rion-git-btn-icon .svg-icon {
+	width: 15px;
+	height: 15px;
+}
+
+.rion-git-caret {
+	flex: 0 0 auto;
+	padding: 0 6px;
+}
+
+/* 折叠分区 */
+
+.rion-git-section {
+	margin-bottom: 4px;
+}
+
+.rion-git-section-header {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 4px 2px;
+	cursor: pointer;
+	user-select: none;
+	border-radius: var(--radius-s);
+}
+
+.rion-git-section-header:hover {
+	background: var(--background-modifier-hover);
+}
+
+.rion-git-chevron {
+	display: flex;
+	align-items: center;
+	color: var(--text-muted);
+}
+
+.rion-git-chevron .svg-icon {
+	width: 14px;
+	height: 14px;
+}
+
+.rion-git-section-title {
+	font-size: var(--font-ui-small);
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+.rion-git-badge {
+	margin-left: 4px;
+	padding: 0 6px;
+	min-width: 18px;
+	text-align: center;
+	border-radius: 9px;
+	font-size: 11px;
+	line-height: 16px;
+	color: var(--text-muted);
+	background: var(--background-modifier-hover);
+}
+
+.rion-git-section-actions {
+	margin-left: auto;
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+
+.rion-git-section-actions .clickable-icon {
+	padding: 2px;
+	height: auto;
+}
+
+/* 文件行 */
+
+.rion-git-section-body {
+	padding: 2px 0 6px;
+}
+
+.rion-git-file-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 2px 4px 2px 14px;
+	border-radius: var(--radius-s);
+	font-size: var(--font-ui-small);
+}
+
+.rion-git-file-row:hover {
+	background: var(--background-modifier-hover);
+}
+
+.rion-git-file-badge {
+	flex: 0 0 auto;
+	width: 14px;
+	text-align: center;
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--text-muted);
+}
+
+.rion-git-file-badge.mod-M { color: #d7a12e; }
+.rion-git-file-badge.mod-U { color: #3ba55c; }
+.rion-git-file-badge.mod-A { color: #3ba55c; }
+.rion-git-file-badge.mod-D { color: var(--text-error); }
+.rion-git-file-badge.mod-R { color: #4a9eda; }
+.rion-git-file-badge.mod-! { color: var(--text-error); }
+
+.rion-git-file-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.rion-git-file-dir {
+	margin-left: auto;
+	font-size: 11px;
+	color: var(--text-faint);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* 历史提交 */
+
+.rion-git-commit-item {
+	border-left: 2px solid var(--background-modifier-border);
+	margin-left: 6px;
+	padding-left: 8px;
+}
+
+.rion-git-commit-head {
+	display: flex;
+	gap: 6px;
+	padding: 3px 4px;
+	cursor: pointer;
+	border-radius: var(--radius-s);
+}
+
+.rion-git-commit-head:hover {
+	background: var(--background-modifier-hover);
+}
+
+.rion-git-commit-dot {
+	flex: 0 0 auto;
+	width: 8px;
+	height: 8px;
+	margin-top: 5px;
+	border-radius: 50%;
+	background: var(--interactive-accent);
+}
+
+.rion-git-commit-text {
+	min-width: 0;
+	flex: 1 1 auto;
+}
+
+.rion-git-commit-subject {
+	font-size: var(--font-ui-small);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.rion-git-commit-meta {
+	display: flex;
+	gap: 8px;
+	font-size: 11px;
+	color: var(--text-faint);
+}
+
+.rion-git-refs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-top: 2px;
+}
+
+.rion-git-ref {
+	font-size: 10px;
+	padding: 0 5px;
+	border-radius: 8px;
+	background: var(--background-modifier-hover);
+	color: var(--text-muted);
+}
+
+.rion-git-commit-files {
+	margin-left: 14px;
+	padding-bottom: 4px;
+}
+
+.rion-git-commit-files .rion-git-file-row {
+	padding-left: 4px;
+}
+
+.rion-git-empty {
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+	padding: 6px 4px 6px 14px;
+}
+
+/* ── 改动弹窗 ─────────────────────────────────────── */
 
 .rion-git-modal .rion-git-branch {
 	color: var(--text-muted);
 	margin-top: -0.4em;
 }
 
-.rion-git-file-list {
+.rion-git-modal .rion-git-file-list {
 	max-height: 50vh;
 	overflow-y: auto;
 	border: 1px solid var(--background-modifier-border);
 	border-radius: var(--radius-s);
-	padding: 6px 10px;
+	padding: 6px 8px;
 	margin-bottom: 1em;
-}
-
-.rion-git-file-row {
-	display: flex;
-	gap: 10px;
-	padding: 2px 0;
-	font-size: var(--font-ui-small);
-}
-
-.rion-git-file-state {
-	flex: 0 0 6em;
-	color: var(--text-muted);
-}
-
-.rion-git-file-path {
-	overflow-wrap: anywhere;
 }
 
 .rion-git-modal-actions {
 	display: flex;
 	gap: 8px;
 	justify-content: flex-end;
+}
+
+/* ── 状态栏 ───────────────────────────────────────── */
+
+.rion-git-status {
+	cursor: pointer;
 }

@@ -2,6 +2,12 @@ import type RionGitPlugin from "./main";
 
 export function registerCommands(plugin: RionGitPlugin): void {
 	plugin.addCommand({
+		id: "open-panel",
+		name: "打开侧边栏面板",
+		callback: () => void plugin.activateView(),
+	});
+
+	plugin.addCommand({
 		id: "commit-all",
 		name: "提交全部改动",
 		callback: () => void plugin.commitAll(),

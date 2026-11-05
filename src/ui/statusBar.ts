@@ -8,7 +8,7 @@ export class GitStatusBar {
 		this.el = plugin.addStatusBarItem();
 		this.el.addClass("rion-git-status");
 		this.render("Git …", "Rion Git 正在检测仓库…");
-		this.el.onClickEvent(() => void plugin.push());
+		this.el.onClickEvent(() => void plugin.activateView());
 	}
 
 	busy(label: string): void {
@@ -27,7 +27,7 @@ export class GitStatusBar {
 		}
 		this.render(
 			`Git • ${status.files.length}`,
-			`分支 ${branch}：${status.files.length} 个改动（点击推送）`
+			`分支 ${branch}：${status.files.length} 个改动（点击打开面板）`
 		);
 	}
 

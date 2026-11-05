@@ -1,6 +1,8 @@
-import { FileSystemAdapter, Menu, Notice, Plugin } from "obsidian";
+import { FileSystemAdapter, Notice, Plugin } from "obsidian";
+import { AutoCommitManager } from "./autoCommit";
 import { registerCommands } from "./commands";
 import { GitQueue } from "./git/exec";
+import { readCommitFiles, readLog } from "./git/log";
 import {
 	commitAll as gitCommitAll,
 	initRepo as gitInitRepo,
@@ -15,24 +17,41 @@ import {
 	RionGitSettingTab,
 } from "./settings";
 import type { RionGitSettings } from "./settings";
-import type { GitContext } from "./types";
+import type { CommitFile, GitContext, LogEntry, RepoStatus } from "./types";
 import { ChangesModal } from "./ui/changesModal";
+import { RionGitView, VIEW_TYPE_RION_GIT } from "./ui/sidebarView";
 import { GitStatusBar } from "./ui/statusBar";
+
+const AUTO_RETRY_COOLDOWN_MS = 5 * 60_000;
+const HISTORY_LIMIT = 30;
+/** 面板打开时的状态轮询间隔。 */
+const STATUS_REFRESH_MS = 30_000;
 
 export default class RionGitPlugin extends Plugin {
 	settings: RionGitSettings = { ...DEFAULT_SETTINGS };
 
+	/** 侧边栏与状态栏共用的最新快照。 */
+	lastStatus: RepoStatus | null = null;
+	lastLog: LogEntry[] = [];
+	lastError: string | null = null;
+
 	private queue = new GitQueue();
 	private cwd = "";
 	private statusBar: GitStatusBar | null = null;
+	private autoCommit: AutoCommitManager | null = null;
+	private autoCooldownUntil = 0;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
 
 		this.cwd = (this.app.vault.adapter as FileSystemAdapter).getBasePath();
 
+		this.registerView(VIEW_TYPE_RION_GIT, (leaf) => new RionGitView(leaf, this));
+
 		this.addSettingTab(new RionGitSettingTab(this.app, this));
-		this.addRibbonIcon("git-branch", "Rion Git", (evt) => this.openMenu(evt));
+		this.addRibbonIcon("git-branch", "Rion Git: 打开面板", () => {
+			void this.activateView();
+		});
 
 		if (this.settings.showStatusBar) {
 			this.statusBar = new GitStatusBar(this);
@@ -40,11 +59,25 @@ export default class RionGitPlugin extends Plugin {
 
 		registerCommands(this);
 
+		this.autoCommit = new AutoCommitManager(this);
+		this.autoCommit.register();
+
+		// 不再监听 vault 变更事件，面板打开时靠轻量轮询保持状态新鲜。
+		this.registerInterval(
+			window.setInterval(() => {
+				if (this.app.workspace.getLeavesOfType(VIEW_TYPE_RION_GIT).length === 0) {
+					return;
+				}
+				void this.refresh();
+			}, STATUS_REFRESH_MS)
+		);
+
 		this.app.workspace.onLayoutReady(() => void this.refresh());
 	}
 
 	onunload(): void {
-		console.info("[Rion Git] 已卸载");
+		this.autoCommit?.dispose();
+		this.app.workspace.detachLeavesOfType(VIEW_TYPE_RION_GIT);
 	}
 
 	private get ctx(): GitContext {
@@ -52,32 +85,83 @@ export default class RionGitPlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const stored = (await this.loadData()) ?? {};
+		const settings = { ...DEFAULT_SETTINGS };
+		const target = settings as Record<string, unknown>;
+
+		// 只接受当前版本仍然存在的键，避免旧版本遗留的设置项被反复写回。
+		for (const key of Object.keys(DEFAULT_SETTINGS)) {
+			const value = stored[key];
+			if (value !== undefined && typeof value === typeof target[key]) {
+				target[key] = value;
+			}
+		}
+
+		this.settings = settings;
 	}
 
 	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
 	}
 
+	applyAutoSettings(): void {
+		this.autoCommit?.applySettings();
+	}
+
+	async toggleAutoCommit(): Promise<void> {
+		this.settings.autoCommitEnabled = !this.settings.autoCommitEnabled;
+		await this.saveSettings();
+		this.applyAutoSettings();
+		this.refreshViews();
+	}
+
+	async activateView(): Promise<void> {
+		const { workspace } = this.app;
+		const existing = workspace.getLeavesOfType(VIEW_TYPE_RION_GIT);
+		const first = existing[0];
+		if (first) {
+			await workspace.revealLeaf(first);
+			return;
+		}
+
+		const leaf = workspace.getRightLeaf(false);
+		if (!leaf) return;
+		await leaf.setViewState({ type: VIEW_TYPE_RION_GIT, active: true });
+		await workspace.revealLeaf(leaf);
+	}
+
 	async refresh(): Promise<void> {
 		await this.queue.add(() => this.refreshInQueue());
 	}
 
-	async commitAll(): Promise<void> {
+	async loadCommitFiles(hash: string): Promise<CommitFile[]> {
+		return this.queue.add(() => readCommitFiles(this.ctx, hash));
+	}
+
+	async commitAll(): Promise<boolean> {
+		return this.commitWithMessage("");
+	}
+
+	async commitWithMessage(message: string): Promise<boolean> {
+		const text =
+			message.trim() ||
+			formatCommitMessage(this.settings.commitMessageTemplate);
+
+		let ok = false;
 		await this.queue.add(async () => {
 			if (!(await this.ensureRepo())) return;
 			this.statusBar?.busy("提交中…");
 
-			const result = await gitCommitAll(
-				this.ctx,
-				formatCommitMessage(this.settings.commitMessageTemplate)
-			);
+			const result = await gitCommitAll(this.ctx, text);
 			this.notify(result);
 			await this.refreshInQueue();
+			ok = result.ok;
 		});
+		return ok;
 	}
 
-	async push(): Promise<void> {
+	async push(): Promise<boolean> {
+		let ok = false;
 		await this.queue.add(async () => {
 			if (!(await this.ensureRepo())) return;
 			this.statusBar?.busy("推送中…");
@@ -85,10 +169,13 @@ export default class RionGitPlugin extends Plugin {
 			const result = await gitPush(this.ctx);
 			this.notify(result);
 			await this.refreshInQueue();
+			ok = result.ok;
 		});
+		return ok;
 	}
 
-	async pull(): Promise<void> {
+	async pull(): Promise<boolean> {
+		let ok = false;
 		await this.queue.add(async () => {
 			if (!(await this.ensureRepo())) return;
 			this.statusBar?.busy("拉取中…");
@@ -96,18 +183,21 @@ export default class RionGitPlugin extends Plugin {
 			const result = await gitPull(this.ctx);
 			this.notify(result);
 			await this.refreshInQueue();
+			ok = result.ok;
 		});
+		return ok;
 	}
 
-	async commitAndPush(): Promise<void> {
+	async commitAndPush(message = ""): Promise<boolean> {
+		let ok = false;
 		await this.queue.add(async () => {
 			if (!(await this.ensureRepo())) return;
 			this.statusBar?.busy("提交中…");
 
-			const commit = await gitCommitAll(
-				this.ctx,
-				formatCommitMessage(this.settings.commitMessageTemplate)
-			);
+			const text =
+				message.trim() ||
+				formatCommitMessage(this.settings.commitMessageTemplate);
+			const commit = await gitCommitAll(this.ctx, text);
 			if (!commit.ok) {
 				this.notify(commit);
 				await this.refreshInQueue();
@@ -123,7 +213,9 @@ export default class RionGitPlugin extends Plugin {
 					: pushed.message,
 			});
 			await this.refreshInQueue();
+			ok = pushed.ok;
 		});
+		return ok;
 	}
 
 	async showChanges(): Promise<void> {
@@ -133,11 +225,14 @@ export default class RionGitPlugin extends Plugin {
 		});
 		if (!status) return;
 
+		this.lastStatus = status;
 		this.statusBar?.update(status);
+		this.refreshViews();
 		new ChangesModal(this.app, this, status).open();
 	}
 
-	async initRepo(): Promise<void> {
+	async initRepo(): Promise<boolean> {
+		let ok = false;
 		await this.queue.add(async () => {
 			this.statusBar?.busy("初始化…");
 
@@ -146,18 +241,75 @@ export default class RionGitPlugin extends Plugin {
 
 			this.notify(result);
 			await this.refreshInQueue();
+			ok = result.ok;
+		});
+		return ok;
+	}
+
+	/** 自动提交入口：成功时静默，只更新界面；失败则进入冷却期，避免反复弹窗。 */
+	async runAutoCommit(reason: string): Promise<void> {
+		console.debug(`[Rion Git] 自动提交触发（${reason}）`);
+
+		await this.queue.add(async () => {
+			if (!this.settings.autoCommitEnabled) return;
+			if (Date.now() < this.autoCooldownUntil) return;
+
+			const detection = await detectRepo(this.ctx);
+			if (detection.kind !== "ok") {
+				this.lastStatus = null;
+				this.lastError = detection.detail;
+				this.refreshViews();
+				return;
+			}
+
+			const result = await gitCommitAll(
+				this.ctx,
+				formatCommitMessage(this.settings.commitMessageTemplate)
+			);
+			if (!result.ok) {
+				this.autoCooldownUntil = Date.now() + AUTO_RETRY_COOLDOWN_MS;
+				new Notice(
+					`Rion Git 自动提交失败：${result.message}（5 分钟内不再重试）`,
+					8000
+				);
+				await this.refreshInQueue();
+				return;
+			}
+
+			if ((result.count ?? 0) > 0 && this.settings.autoPush) {
+				const pushed = await gitPush(this.ctx);
+				if (!pushed.ok) {
+					this.autoCooldownUntil = Date.now() + AUTO_RETRY_COOLDOWN_MS;
+					new Notice(`Rion Git 自动推送失败：${pushed.message}`, 8000);
+				}
+			}
+
+			await this.refreshInQueue();
 		});
 	}
 
 	private async refreshInQueue(): Promise<void> {
 		const detection = await detectRepo(this.ctx);
 		if (detection.kind !== "ok") {
+			this.lastStatus = null;
+			this.lastLog = [];
+			this.lastError = detection.detail;
 			this.statusBar?.showError(detection.detail);
+			this.refreshViews();
 			return;
 		}
 
-		const status = await readStatus(this.ctx);
-		this.statusBar?.update(status);
+		this.lastError = null;
+		this.lastStatus = await readStatus(this.ctx);
+		this.lastLog = await readLog(this.ctx, HISTORY_LIMIT);
+		this.statusBar?.update(this.lastStatus);
+		this.refreshViews();
+	}
+
+	private refreshViews(): void {
+		for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE_RION_GIT)) {
+			if (leaf.view instanceof RionGitView) leaf.view.render();
+		}
 	}
 
 	private async ensureRepo(): Promise<boolean> {
@@ -195,41 +347,5 @@ export default class RionGitPlugin extends Plugin {
 				"",
 			].join("\n")
 		);
-	}
-
-	private openMenu(evt: MouseEvent): void {
-		const menu = new Menu();
-		menu.addItem((item) =>
-			item
-				.setTitle("提交全部改动")
-				.setIcon("save")
-				.onClick(() => void this.commitAll())
-		);
-		menu.addItem((item) =>
-			item
-				.setTitle("提交并推送")
-				.setIcon("upload")
-				.onClick(() => void this.commitAndPush())
-		);
-		menu.addItem((item) =>
-			item
-				.setTitle("推送")
-				.setIcon("upload")
-				.onClick(() => void this.push())
-		);
-		menu.addItem((item) =>
-			item
-				.setTitle("拉取")
-				.setIcon("download")
-				.onClick(() => void this.pull())
-		);
-		menu.addSeparator();
-		menu.addItem((item) =>
-			item
-				.setTitle("查看改动")
-				.setIcon("list")
-				.onClick(() => void this.showChanges())
-		);
-		menu.showAtMouseEvent(evt);
 	}
 }
