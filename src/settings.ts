@@ -5,6 +5,8 @@ export interface RionGitSettings {
 	gitPath: string;
 	commitMessageTemplate: string;
 	showStatusBar: boolean;
+	/** 插件加载完成后是否自动在右侧边栏打开面板。 */
+	autoOpenPanel: boolean;
 	/** 自动提交总开关。 */
 	autoCommitEnabled: boolean;
 	/** 定时自动提交间隔，单位分钟；0 表示关闭。 */
@@ -17,6 +19,7 @@ export const DEFAULT_SETTINGS: RionGitSettings = {
 	gitPath: "git",
 	commitMessageTemplate: "vault backup: {{date}}",
 	showStatusBar: true,
+	autoOpenPanel: true,
 	autoCommitEnabled: true,
 	autoCommitInterval: 10,
 	autoPush: false,
@@ -131,6 +134,18 @@ export class RionGitSettingTab extends PluginSettingTab {
 			);
 
 		containerEl.createEl("h3", { text: "界面" });
+
+		new Setting(containerEl)
+			.setName("启动时自动打开面板")
+			.setDesc("Obsidian 启动后自动在右侧边栏打开 Rion Git。关闭后可用 Ribbon 图标、状态栏或命令手动打开。")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.autoOpenPanel)
+					.onChange(async (value) => {
+						this.plugin.settings.autoOpenPanel = value;
+						await this.plugin.saveSettings();
+					})
+			);
 
 		new Setting(containerEl)
 			.setName("显示状态栏")

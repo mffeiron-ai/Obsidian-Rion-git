@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Rion Git — 差异视图预览</title>
+
+<!-- 插件真实样式表 -->
+<link rel="stylesheet" href="../../styles.css">
+
+<style>
+:root {
+	--background-primary: #1e1e1e;
+	--background-primary-alt: #1a1a1a;
+	--background-secondary: #161616;
+	--background-modifier-border: #333333;
+	--background-modifier-hover: rgba(255, 255, 255, 0.075);
+	--text-normal: #dadada;
+	--text-muted: #999999;
+	--text-faint: #666666;
+	--text-accent: hsl(254, 80%, 68%);
+	--text-error: #e93147;
+	--text-on-accent: #ffffff;
+	--interactive-accent: hsl(254, 80%, 68%);
+	--font-interface: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+		"Microsoft YaHei", sans-serif;
+	--font-monospace: "JetBrains Mono", "Cascadia Code", Consolas,
+		"Microsoft YaHei", monospace;
+	--font-ui-small: 13px;
+	--font-ui-smaller: 12px;
+	--radius-s: 4px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+	margin: 0;
+	padding: 0;
+	background: var(--background-secondary);
+}
+
+body {
+	font-family: var(--font-interface);
+	font-size: 14px;
+	color: var(--text-normal);
+}
+
+.shell {
+	width: 900px;
+	height: 430px;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	display: block;
+}
+
+button {
+	font-family: inherit;
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+	background: var(--background-modifier-hover);
+	border: none;
+	border-radius: var(--radius-s);
+	padding: 0 12px;
+	height: 28px;
+	cursor: pointer;
+}
+button.clickable-icon {
+	background: transparent;
+	height: auto;
+	padding: 2px;
+	color: var(--text-muted);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+button.clickable-icon:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+svg.svg-icon {
+	width: 16px;
+	height: 16px;
+	stroke: currentColor;
+	fill: none;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<div class="rion-git-diff-view">
+
+	<div class="rion-git-diff-header">
+		<span class="rion-git-diff-title">GitHub 整理.md<span class="rion-git-diff-commit"> @ 2e25acb</span></span>
+		<div class="rion-git-diff-meta">
+			<span class="rion-git-add">+3</span>
+			<span class="rion-git-del">-1</span>
+		</div>
+		<div class="rion-git-diff-actions">
+			<button class="clickable-icon" aria-label="重新读取差异"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></button>
+			<button class="clickable-icon" aria-label="提交此文件"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></button>
+			<button class="clickable-icon" aria-label="撤销修改"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
+		</div>
+	</div>
+
+	<div class="rion-git-diff">
+		<div class="rion-git-diff-line is-meta">diff --git a/GitHub 整理.md b/GitHub 整理.md</div>
+		<div class="rion-git-diff-line is-meta">index 8811e2e..c1b2899 100644</div>
+		<div class="rion-git-diff-line is-meta">--- a/GitHub 整理.md</div>
+		<div class="rion-git-diff-line is-meta">+++ b/GitHub 整理.md</div>
+		<div class="rion-git-diff-line is-hunk">@@ -1,7 +1,9 @@</div>
+		<div class="rion-git-diff-line is-context"> # GitHub 整理</div>
+		<div class="rion-git-diff-line is-context"> </div>
+		<div class="rion-git-diff-line is-del">-已有项目按语言分类整理，暂时只有三个：</div>
+		<div class="rion-git-diff-line is-add">+已有项目按语言与用途分类整理：</div>
+		<div class="rion-git-diff-line is-add">+</div>
+		<div class="rion-git-diff-line is-add">+| 语言 | 项目 | 说明 |</div>
+		<div class="rion-git-diff-line is-context"> </div>
+		<div class="rion-git-diff-line is-context"> ## 待办</div>
+		<div class="rion-git-diff-line is-context"> </div>
+		<div class="rion-git-diff-line is-context"> - [ ] 补充截图</div>
+		<div class="rion-git-diff-line is-context"> - [x] 建立仓库</div>
+	</div>
+
+</div>
+</div>
+</body>
+</html>

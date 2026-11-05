@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Rion Git — 侧边栏预览</title>
+
+<!-- 插件真实样式表 -->
+<link rel="stylesheet" href="../../styles.css">
+
+<style>
+/* Obsidian 默认深色主题的关键变量与基础控件样式（仅用于离线还原外观） */
+:root {
+	--background-primary: #1e1e1e;
+	--background-primary-alt: #1a1a1a;
+	--background-secondary: #161616;
+	--background-modifier-border: #333333;
+	--background-modifier-hover: rgba(255, 255, 255, 0.075);
+	--background-modifier-error: #3b1e1e;
+	--text-normal: #dadada;
+	--text-muted: #999999;
+	--text-faint: #666666;
+	--text-accent: hsl(254, 80%, 68%);
+	--text-error: #e93147;
+	--text-on-accent: #ffffff;
+	--interactive-accent: hsl(254, 80%, 68%);
+	--interactive-accent-hover: hsl(254, 80%, 74%);
+	--font-interface: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+		"Microsoft YaHei", sans-serif;
+	--font-monospace: "JetBrains Mono", "Cascadia Code", Consolas,
+		"Microsoft YaHei", monospace;
+	--font-ui-small: 13px;
+	--font-ui-smaller: 12px;
+	--radius-s: 4px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+	margin: 0;
+	padding: 0;
+	background: var(--background-secondary);
+}
+
+body {
+	font-family: var(--font-interface);
+	font-size: 14px;
+	color: var(--text-normal);
+}
+
+.shell {
+	width: 340px;
+	height: 470px;
+	background: var(--background-primary);
+	border-right: 1px solid var(--background-modifier-border);
+}
+
+/* —— Obsidian 基础控件（近似） —— */
+button {
+	font-family: inherit;
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+	background: var(--background-modifier-hover);
+	border: none;
+	border-radius: var(--radius-s);
+	padding: 0 12px;
+	height: 28px;
+	cursor: pointer;
+	line-height: 1;
+}
+button:hover { background: rgba(255, 255, 255, 0.13); }
+
+button.mod-cta {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+button.mod-cta:hover { background: var(--interactive-accent-hover); }
+
+button.clickable-icon {
+	background: transparent;
+	height: auto;
+	padding: 2px;
+	color: var(--text-muted);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+button.clickable-icon:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+svg.svg-icon {
+	width: 16px;
+	height: 16px;
+	stroke: currentColor;
+	fill: none;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+textarea {
+	font-family: inherit;
+	color: var(--text-normal);
+	background: var(--background-primary-alt);
+	border: 1px solid var(--background-modifier-border);
+	outline: none;
+	resize: none;
+}
+textarea::placeholder { color: var(--text-faint); }
+</style>
+</head>
+<body>
+<div class="shell">
+<div class="rion-git-sidebar">
+
+	<div class="rion-git-commit-box">
+		<textarea class="rion-git-message" rows="2" placeholder="消息（Enter 在 &quot;main&quot; 上提交）"></textarea>
+		<div class="rion-git-commit-actions">
+			<button class="mod-cta rion-git-commit-btn">
+				<span class="rion-git-btn-icon"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+				<span>提交</span>
+			</button>
+			<button class="mod-cta rion-git-caret" aria-label="更多提交方式">
+				<svg class="svg-icon" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+			</button>
+		</div>
+		<div class="rion-git-auto-hint">自动提交：每 10 分钟</div>
+	</div>
+
+	<div class="rion-git-section">
+		<div class="rion-git-section-header">
+			<span class="rion-git-chevron"><svg class="svg-icon" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></span>
+			<span class="rion-git-section-title">更改</span>
+			<span class="rion-git-badge">4</span>
+			<div class="rion-git-section-actions">
+				<button class="clickable-icon" aria-label="自动提交：开（点击关闭）"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg></button>
+				<button class="clickable-icon" aria-label="刷新"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></button>
+				<button class="clickable-icon" aria-label="更多操作"><svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+			</div>
+		</div>
+		<div class="rion-git-section-body">
+			<div class="rion-git-file-row is-clickable" title="已修改" style="background: var(--background-modifier-hover)">
+				<span class="rion-git-file-badge mod-M">M</span>
+				<span class="rion-git-file-name">GitHub 整理.md</span>
+				<div class="rion-git-file-end">
+					<div class="rion-git-file-actions" style="opacity: 1">
+						<button class="clickable-icon" aria-label="提交此文件"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></button>
+						<button class="clickable-icon" aria-label="撤销修改"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
+					</div>
+				</div>
+			</div>
+			<div class="rion-git-file-row is-clickable" title="已修改">
+				<span class="rion-git-file-badge mod-M">M</span>
+				<span class="rion-git-file-name">11-05.md</span>
+				<div class="rion-git-file-end">
+					<span class="rion-git-file-dir">2025/日记</span>
+					<div class="rion-git-file-actions">
+						<button class="clickable-icon" aria-label="提交此文件"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></button>
+						<button class="clickable-icon" aria-label="撤销修改"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
+					</div>
+				</div>
+			</div>
+			<div class="rion-git-file-row is-clickable" title="未跟踪">
+				<span class="rion-git-file-badge mod-U">U</span>
+				<span class="rion-git-file-name">Rion Git 设计.md</span>
+				<div class="rion-git-file-end">
+					<span class="rion-git-file-dir">开发笔记</span>
+					<div class="rion-git-file-actions">
+						<button class="clickable-icon" aria-label="提交此文件"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></button>
+						<button class="clickable-icon" aria-label="撤销修改"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
+					</div>
+				</div>
+			</div>
+			<div class="rion-git-file-row is-clickable" title="已删除">
+				<span class="rion-git-file-badge mod-D">D</span>
+				<span class="rion-git-file-name">template.md</span>
+				<div class="rion-git-file-end">
+					<div class="rion-git-file-actions">
+						<button class="clickable-icon" aria-label="提交此文件"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></button>
+						<button class="clickable-icon" aria-label="撤销修改"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="rion-git-section">
+		<div class="rion-git-section-header">
+			<span class="rion-git-chevron"><svg class="svg-icon" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></span>
+			<span class="rion-git-section-title">历史提交</span>
+			<span class="rion-git-badge">30</span>
+			<div class="rion-git-section-actions">
+				<button class="clickable-icon" aria-label="拉取"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></button>
+				<button class="clickable-icon" aria-label="推送"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg></button>
+				<button class="clickable-icon" aria-label="刷新历史"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></button>
+			</div>
+		</div>
+		<div class="rion-git-section-body">
+
+			<div class="rion-git-commit-item">
+				<div class="rion-git-commit-head">
+					<span class="rion-git-commit-dot"></span>
+					<span class="rion-git-commit-subject" title="vault backup: 2026-11-05 13:20:14">vault backup: 2026-11-05 13:20:14</span>
+					<span class="rion-git-refs"><span class="rion-git-ref">HEAD -&gt; main</span></span>
+				</div>
+				<div class="rion-git-commit-files">
+					<div class="rion-git-file-row is-clickable" title="M">
+						<span class="rion-git-file-badge mod-M">M</span>
+						<span class="rion-git-file-name">GitHub 整理.md</span>
+						<div class="rion-git-file-end"></div>
+					</div>
+					<div class="rion-git-file-row is-clickable" title="A">
+						<span class="rion-git-file-badge mod-A">A</span>
+						<span class="rion-git-file-name">Rion Git 设计.md</span>
+						<div class="rion-git-file-end"><span class="rion-git-file-dir">开发笔记</span></div>
+					</div>
+				</div>
+			</div>
+
+			<div class="rion-git-commit-item">
+				<div class="rion-git-commit-head">
+					<span class="rion-git-commit-dot"></span>
+					<span class="rion-git-commit-subject" title="vault backup: 2026-11-05 13:06:58">vault backup: 2026-11-05 13:06:58</span>
+				</div>
+			</div>
+
+			<div class="rion-git-commit-item">
+				<div class="rion-git-commit-head">
+					<span class="rion-git-commit-dot"></span>
+					<span class="rion-git-commit-subject" title="init">init</span>
+					<span class="rion-git-refs"><span class="rion-git-ref">origin/main</span></span>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+</div>
+</div>
+</body>
+</html>

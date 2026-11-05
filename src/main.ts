@@ -93,7 +93,10 @@ export default class RionGitPlugin extends Plugin {
 			}, STATUS_REFRESH_MS)
 		);
 
-		this.app.workspace.onLayoutReady(() => void this.refresh());
+		this.app.workspace.onLayoutReady(() => {
+			void this.refresh();
+			if (this.settings.autoOpenPanel) void this.ensurePanelVisible();
+		});
 	}
 
 	onunload(): void {
@@ -151,6 +154,14 @@ export default class RionGitPlugin extends Plugin {
 		if (!leaf) return;
 		await leaf.setViewState({ type: VIEW_TYPE_RION_GIT, active: true });
 		await workspace.revealLeaf(leaf);
+	}
+
+	/** 布局恢复后调用：只有面板确实不存在时才创建，避免覆盖用户的侧边栏布局。 */
+	async ensurePanelVisible(): Promise<void> {
+		if (this.app.workspace.getLeavesOfType(VIEW_TYPE_RION_GIT).length > 0) {
+			return;
+		}
+		await this.activateView();
 	}
 
 	async refresh(): Promise<void> {

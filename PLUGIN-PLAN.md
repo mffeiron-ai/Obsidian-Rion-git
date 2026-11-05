@@ -373,6 +373,7 @@ sequenceDiagram
 | `gitPath` | string | `"git"` | 从桌面图标启动时 PATH 可能不含 git |
 | `commitMessageTemplate` | string | `vault backup: {{date}}` | 支持 `{{date}}` |
 | `showStatusBar` | boolean | `true` | 是否显示底部状态栏 |
+| `autoOpenPanel` | boolean | `true` | 启动后自动在右侧边栏打开面板 |
 | `autoCommitEnabled` | boolean | `true` | 自动提交总开关 |
 | `autoCommitInterval` | number(min) | `10` | 0 = 关闭定时提交 |
 | `autoPush` | boolean | `false` | 自动提交后推送 |
