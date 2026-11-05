@@ -1,0 +1,13 @@
+node_modules/
+
+# 构建产物
+main.js
+main.js.map
+*.map
+
+# Obsidian 运行时数据
+data.json
+
+# 系统文件
+.DS_Store
+Thumbs.db

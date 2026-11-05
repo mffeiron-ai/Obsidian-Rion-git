@@ -1,0 +1,9 @@
+{
+	"id": "rion-git",
+	"name": "Rion Git",
+	"version": "0.1.0",
+	"minAppVersion": "1.4.0",
+	"description": "轻量版 Git 版本控制：自动备份、推送与拉取。",
+	"author": "Rion",
+	"isDesktopOnly": true
+}
