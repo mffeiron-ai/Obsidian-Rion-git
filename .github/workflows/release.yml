@@ -30,6 +30,8 @@ jobs:
           npm run build
 
       - name: Generate artifact attestation
+        # 签名是官方推荐做法，但若该 action 版本不可用不应阻塞发版。
+        continue-on-error: true
         uses: actions/attest@v4
         with:
           subject-path: |
