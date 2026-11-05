@@ -1,9 +1,10 @@
 {
 	"id": "rion-git",
 	"name": "Rion Git",
-	"version": "0.1.0",
-	"minAppVersion": "1.4.0",
-	"description": "轻量版 Git 版本控制：自动备份、推送与拉取。",
+	"version": "1.0.0",
+	"minAppVersion": "1.9.0",
+	"description": "Track your vault with Git: auto-commit, diff preview, push and pull.",
 	"author": "Rion",
+	"authorUrl": "https://github.com/mffeiron-ai",
 	"isDesktopOnly": true
 }

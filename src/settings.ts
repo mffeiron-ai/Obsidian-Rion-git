@@ -101,8 +101,6 @@ export class RionGitSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		containerEl.createEl("h2", { text: "Rion Git" });
-
 		new Setting(containerEl)
 			.setName("Git 可执行文件")
 			.setDesc(
@@ -133,7 +131,7 @@ export class RionGitSettingTab extends PluginSettingTab {
 					})
 			);
 
-		containerEl.createEl("h3", { text: "自动备份" });
+		new Setting(containerEl).setName("自动备份").setHeading();
 
 		new Setting(containerEl)
 			.setName("自动提交方式")
@@ -207,7 +205,7 @@ export class RionGitSettingTab extends PluginSettingTab {
 					})
 			);
 
-		containerEl.createEl("h3", { text: "界面" });
+		new Setting(containerEl).setName("界面").setHeading();
 
 		new Setting(containerEl)
 			.setName("启动时自动打开面板")
@@ -242,7 +240,7 @@ export class RionGitSettingTab extends PluginSettingTab {
 					.onClick(() => void this.plugin.activateView())
 			);
 
-		containerEl.createEl("h3", { text: "操作" });
+		new Setting(containerEl).setName("操作").setHeading();
 
 		new Setting(containerEl)
 			.setName("提交全部改动")

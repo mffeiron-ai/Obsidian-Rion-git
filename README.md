@@ -1,161 +1,166 @@
 # Rion Git
 
-简体中文 | [English](./README.en.md)
+English | [简体中文](./README.zh-CN.md)
 
-一个轻量的 Obsidian Git 插件：在侧边栏里查看改动、写提交信息、提交、推送、拉取，并且能直接看每个文件改了什么。
+A lightweight Git plugin for Obsidian: review changes in the sidebar, write a commit message, commit, push, pull — and see exactly what changed in any file.
 
-面向桌面端，调用你本机已安装的 Git。
+Desktop only. It drives the Git you already have installed.
 
 ---
 
-## 功能
+## Features
 
-| 能力 | 说明 |
+| Feature | Description |
 |---|---|
-| 侧边栏面板 | 改动列表 + 提交框 + 操作按钮，风格接近 VS Code 的源代码管理面板 |
-| 查看差异 | 点击文件在**编辑区标签页**打开 diff，可与其他笔记并排对照 |
-| 单文件操作 | 悬停文件行出现「提交此文件」「撤销修改」两个图标 |
-| 提交历史 | 最近 30 条提交，点击展开查看该提交改动的文件，再点文件看当时的差异 |
-| 历史统计 | 提交日历热力图 + 按周的改动趋势（行数 / 文件数双轴折线） |
-| 推送 / 拉取 | 一键操作，自动处理首次推送的 upstream 关联 |
-| 定时自动提交 | 按固定间隔提交，可在面板上一键开关 |
-| 智能自动提交 | 改动达到文件数或行数阈值时自动提交 |
-| 状态栏 | 底部常驻显示改动数量与当前操作状态，点击打开面板 |
+| Sidebar panel | Change list, commit box and actions, close in spirit to VS Code's Source Control |
+| Diff view | Click a file to open its diff in an **editor tab**, side by side with your notes |
+| Per-file actions | Hover a file row to reveal "commit this file" and "discard changes" |
+| History | Latest 30 commits; expand one to list its files, click a file to see that commit's diff |
+| History stats | Commit calendar heatmap plus a weekly trend chart (lines and file count, dual axis) |
+| Push / pull | One click, with automatic upstream setup on first push |
+| Smart auto-commit | Commits when changes reach a file-count or line-count threshold |
+| Status bar | Always-visible change count and operation state; click to open the panel |
 
-## 界面
+## Interface
 
-侧边栏面板：
+Sidebar panel:
 
-![侧边栏面板](./docs/sidebar.png)
+![Sidebar panel](./docs/sidebar.png)
 
-点击文件后在编辑区标签页打开的差异视图：
+Diff view, opened in an editor tab when you click a file:
 
-![差异视图](./docs/diff.png)
+![Diff view](./docs/diff.png)
 
-> 示意图由插件真实的 DOM 结构与 `styles.css` 渲染，配色取 Obsidian 默认深色主题。
+> These previews are rendered from the plugin's real DOM structure and `styles.css`, using Obsidian's default dark theme colours.
 
-## 使用
+## Usage
 
-### 打开面板
+### Open the panel
 
-Obsidian 启动后会自动在右侧边栏打开面板（可在设置里关掉）。如果之前手动关闭了，任选一种重新打开：
+The panel opens automatically in the right sidebar when Obsidian starts (disable it in settings). If you closed it earlier, any of these reopens it:
 
-- 点击左侧边栏的 `git-branch` 图标
-- 点击底部状态栏的 `Git ✓` / `Git • 3`
-- 命令面板执行「Rion Git: 打开侧边栏面板」
+- Click the `git-branch` icon in the ribbon
+- Click the status bar item (`Git ✓` / `Git • 3`)
+- Run "Rion Git: Open sidebar panel" from the command palette
 
-### 提交改动
+### Commit changes
 
-1. 在顶部输入提交消息（留空则使用设置里的模板，默认 `vault backup: <当前时间>`）
-2. 按 `Enter` 或点「✓ 提交」
-3. 想同时推送，点右侧 `⌄` 选择「提交并推送」
+1. Type a message in the box at the top (leave empty to use the template from settings — default `vault backup: <timestamp>`)
+2. Press `Enter` or click "✓ Commit"
+3. To push right away, use the `⌄` caret and pick "Commit and push"
 
-提交成功后消息框自动清空，光标留在原位，方便连续提交。
+The message box clears on success while keeping focus, so you can keep going.
 
-### 查看与处理单个文件
+### Inspect and handle a single file
 
-- **点击文件行** → 在编辑区新标签页打开 diff，增减行带颜色，标题栏显示 `+N -M`
-- **悬停文件行** → 右侧出现两个图标：
-  - `✓` 只提交这个文件（其他改动保持在未提交状态）
-  - `⟳` 撤销这个文件的修改（会先弹确认框；未跟踪文件是直接删除）
+- **Click a file row** → opens the diff in a new editor tab, with `+N -M` in the header
+- **Hover a file row** → two icons appear on the right:
+  - `✓` commit only this file (other changes stay uncommitted)
+  - `⟳` discard this file's changes (asks for confirmation first; untracked files get deleted)
 
-### 查看历史
+### Browse history
 
-- 点「历史提交」里的任意一条 → 展开该提交改动的文件列表
-- 再点其中的文件 → 显示该提交对这个文件的改动
-- 右侧胶囊标签表示分支指向，例如 `HEAD -> main`、`origin/main`
+- Click any entry under "History" to expand the list of files it touched
+- Click a file there to see that commit's diff for it
+- The pill on the right shows where a ref points, e.g. `HEAD -> main`, `origin/main`
 
-### 历史统计
+### History stats
 
-点「历史提交」标题栏最右侧的 📈 图标，或命令面板执行「Rion Git: 打开历史统计」。
+Click the 📈 icon at the right end of the "History" header, or run "Rion Git: Open history stats" from the command palette.
 
-![历史统计](./docs/stats.png)
+![History stats](./docs/stats.png)
 
-- **提交日历**：GitHub 风格热力图，一格一天，颜色越深当天提交越多（悬停看具体数字）
-- **改动趋势**：按周汇总的双折线，紫线是提交行数（左轴），绿线是提交文件数（右轴）
-- 右上角可切换统计范围：近 13 / 26 / 52 周
+- **Commit calendar**: GitHub-style heatmap, one cell per day, darker means more commits that day (hover for details)
+- **Trend**: two lines aggregated by week — purple is committed lines (left axis), green is committed file count (right axis)
+- Range selector in the top right: last 13 / 26 / 52 weeks
 
-### 推送与拉取
+### Push and pull
 
-面板「历史提交」一栏右侧的 `⬇`（拉取）、`⬆`（推送），或命令面板执行对应命令。
+Use `⬇` (pull) and `⬆` (push) in the History section header, or the equivalent commands.
 
-首次推送没有远端跟踪分支时会自动 `push -u origin <当前分支>`。
+The first push sets up tracking automatically via `push -u origin <branch>`.
 
-### 自动提交
+### Auto-commit
 
-设置里三选一，互斥：
+Three mutually exclusive modes:
 
-| 方式 | 触发条件 |
+| Mode | Trigger |
 |---|---|
-| 关闭 | 只手动提交 |
-| 定时 | 每隔 N 分钟（默认 10 分钟） |
-| 智能 | 改动达到阈值时：**≥ N 个文件** 或 **≥ N 行** |
+| Off | Manual commits only |
+| Interval | Every N minutes (default 10) |
+| Smart | When changes reach a threshold: **≥ N files** or **≥ N lines** |
 
-智能模式的两个阈值可以分别设为 0 来单独关掉某一维度；都设为 0 等同于关闭。行数统计包含「新增 + 删除」，未跟踪的新文件也会按其行数计入。
+Either smart threshold can be set to 0 to ignore that dimension; setting both to 0 is the same as off. Line counts include additions and deletions, and untracked new files contribute their own line count.
 
-面板上的 `⚡` 是快捷开关：亮起表示已开启，点击会在「关闭」和上次使用的方式之间切换。
+The `⚡` icon in the panel is a shortcut toggle: highlighted means on, and clicking cycles between "off" and the mode you used last.
 
-自动提交成功不会弹提示，只在状态栏和面板上更新改动数量。
+Successful auto-commits are silent; only the status bar and panel update.
 
-### 状态栏
+### Status bar
 
-| 显示 | 含义 |
+| Shows | Meaning |
 |---|---|
-| `Git ✓` | 工作区干净 |
-| `Git • 3` | 3 个待提交改动 |
-| `Git ⟳ 推送中…` | 正在执行操作 |
-| `Git ⚠` | 出错，悬停查看原因 |
+| `Git ✓` | Working tree is clean |
+| `Git • 3` | 3 uncommitted changes |
+| `Git ⟳ Pushing…` | Operation in progress |
+| `Git ⚠` | Error — hover for details |
 
-## 设置
+## Settings
 
-设置 → 第三方插件 → Rion Git
+Settings → Community plugins → Rion Git
 
-| 选项 | 默认 | 说明 |
+| Option | Default | Description |
 |---|---|---|
-| Git 可执行文件 | `git` | 如果从快捷方式启动 Obsidian 时找不到 git，填完整路径，例如 `C:\Program Files\Git\cmd\git.exe` |
-| 提交消息模板 | `vault backup: {{date}}` | `{{date}}` 会替换为 `YYYY-MM-DD HH:mm:ss` |
-| 自动提交方式 | 定时 | 关闭 / 定时 / 智能，三者互斥 |
-| 定时提交间隔 | 10 分钟 | 仅「定时」模式生效 |
-| 智能模式：改动文件数阈值 | 5 | 仅「智能」模式生效，0 = 不按文件数判断 |
-| 智能模式：改动行数阈值 | 200 | 仅「智能」模式生效，0 = 不按行数判断 |
-| 自动提交后推送 | 关 | 需要已配置远端；失败后暂停 5 分钟再试 |
-| 启动时自动打开面板 | 开 | Obsidian 启动后自动在右侧边栏打开 |
-| 显示状态栏 | 开 | 重载插件后生效 |
+| Git executable | `git` | If Obsidian launched from a shortcut can't find git, use an absolute path such as `C:\Program Files\Git\cmd\git.exe` |
+| Commit message template | `vault backup: {{date}}` | `{{date}}` becomes `YYYY-MM-DD HH:mm:ss` |
+| Auto-commit mode | Interval | Off / Interval / Smart — mutually exclusive |
+| Auto-commit interval | 10 min | Interval mode only |
+| Smart: changed-files threshold | 5 | Smart mode only; 0 = ignore file count |
+| Smart: changed-lines threshold | 200 | Smart mode only; 0 = ignore line count |
+| Push after auto-commit | Off | Requires a configured remote; backs off 5 minutes after a failure |
+| Open panel on startup | On | Opens the panel in the right sidebar when Obsidian starts |
+| Show status bar | On | Takes effect after reloading the plugin |
 
-## 命令面板
+## Commands
 
-| 命令 | 作用 |
+| Command | Action |
 |---|---|
-| 打开侧边栏面板 | 显示 Rion Git 面板 |
-| 提交全部改动 | 用模板消息提交 |
-| 提交并推送 | 提交后立刻推送 |
-| 推送到远端 | `git push` |
-| 从远端拉取 | `git pull`（merge 模式） |
-| 查看改动 | 弹出改动列表 |
-| 初始化仓库 | 对当前 vault 执行 `git init`，并写入一份默认 `.gitignore` |
-| 刷新状态 | 重新读取仓库状态 |
+| Open sidebar panel | Show the Rion Git panel |
+| Commit all changes | Commit using the template message |
+| Commit and push | Commit, then push |
+| Push to remote | `git push` |
+| Pull from remote | `git pull` (merge mode) |
+| Show changes | Open a change list |
+| Initialize repository | `git init` for this vault plus a default `.gitignore` |
+| Refresh status | Re-read repository state |
 
-## 技术说明
+## Technical notes
 
-- **TypeScript + esbuild**，打包为单个 `main.js`，只有 `obsidian` 和 Node 内置模块作为外部依赖。
-- **直接调用系统 Git**：通过 Node 的 `child_process.execFile` 执行，参数以数组传递、不经过 shell，避免路径中的空格与中文被 shell 转义破坏。这也意味着插件会复用你已有的 credential helper 和 SSH key，插件本身不保存任何密码或令牌。
-- **接口抽象**：`git/exec.ts` 是唯一 fork 进程的地方，`git/ops.ts` 负责把一次操作翻译成若干条 git 命令，UI 层只读状态、发意图。将来若要支持移动端（改用 `isomorphic-git`），替换面就在这里。
-- **串行队列**：Git 的 `index.lock` 是全局的，所以所有调用都排队执行，避免「自动提交撞上手动推送」这类竞态。
-- **状态解析**：`git status --porcelain=v1 -z --untracked-files=all`，用 NUL 分隔，正确处理带空格、中文、换行的文件名。
-- **路径编码**：所有 git 调用都带 `-c core.quotepath=false`，否则中文路径会输出成 `\346\225\264` 这样的八进制转义。
-- **界面**：侧边栏面板和差异视图都是 Obsidian 的自定义 `ItemView`（不是弹窗），因此可以分屏、可以被记住、重启后还原。
-- **刷新策略**：监听 vault 的 `modify/create/delete/rename` 事件，合并 700ms 后只刷新状态；另有 30 秒轮询兜底，用于在终端里直接操作 git 的情况。自动提交仍然只由定时器触发，与文件事件无关。
+- **TypeScript + esbuild**, bundled into a single `main.js`; only `obsidian` and Node built-ins stay external.
+- **Drives the system Git** through Node's `child_process.execFile`, with arguments passed as an array and never through a shell — so spaces and non-ASCII characters in paths survive intact. It also means your existing credential helper and SSH keys are reused; the plugin never stores passwords or tokens.
+- **Layered design**: `git/exec.ts` is the only place that spawns a process, `git/ops.ts` translates an operation into git commands, and the UI only reads state and expresses intent. Supporting mobile later (via `isomorphic-git`) would be confined to that seam.
+- **Serialized queue**: Git's `index.lock` is global, so every call is queued — this is what keeps auto-commit from colliding with a manual push.
+- **Status parsing**: `git status --porcelain=v1 -z --untracked-files=all`, NUL-delimited, so filenames containing spaces, CJK characters or newlines stay correct.
+- **Path encoding**: every git invocation passes `-c core.quotepath=false`; otherwise non-ASCII paths come back as octal escapes like `\346\225\264`.
+- **UI**: both the sidebar panel and the diff view are custom Obsidian `ItemView`s (not modals), so they can be split, and they survive restarts.
+- **Refresh strategy**: vault `modify/create/delete/rename` events are debounced (700 ms) and only trigger a status refresh; a 30-second poll covers changes made outside Obsidian. Auto-commits are still driven solely by the timer.
 
-## 已知限制
+## Known limitations
 
-- **仅桌面端**：依赖本机 git 与 Node 能力，`manifest.json` 中标记了 `isDesktopOnly`。
-- **需要自行安装 Git** 并配置好身份（`user.name` / `user.email`），否则提交会失败。
-- **凭据**由系统管理：请先在终端完成一次 `git push`，确认 credential helper 或 SSH key 可用。
-- **冲突**目前只能检测并提示，尚无「用本地 / 用远端」的一键处理。
-- 暂不支持分支切换、合并、逐 hunk 暂存。
-- 二进制文件、超过 2MB 的文件不出差异预览。
-- 不建议把 vault 放在 OneDrive / iCloud 等同步盘里再用 Git，`.git` 目录被同步容易损坏。
+- **Desktop only** — relies on a local git binary and Node APIs; `isDesktopOnly` is set in `manifest.json`.
+- **Requires Git** to be installed, with `user.name` / `user.email` configured, or commits will fail.
+- **Credentials** are managed by the system: run a `git push` in a terminal once to make sure your credential helper or SSH key works.
+- **Conflicts** are detected and reported, but there is no one-click "keep mine / keep theirs" yet.
+- No branch switching, merging, or per-hunk staging.
+- Binary files and files above 2 MB get no diff preview.
+- Avoid keeping the vault on a sync drive (OneDrive, iCloud) while using Git — syncing `.git` tends to corrupt the repository.
 
-## 许可证
+## Privacy and network access
+
+- **Data stays local.** Nothing is sent anywhere by the plugin itself; all repository work is done by the `git` executable already installed on your machine.
+- **Network** is used only for `push`, `pull`, and optional auto-push — and only towards the Git remote you configured. There are no other outbound requests.
+- **File access** is limited to your vault folder: the plugin runs `git` with the vault as its working directory, and reads untracked files (up to 512 KB each) to preview their contents and count changed lines.
+- **No telemetry, no accounts, no ads.** Credentials are handled by your system Git configuration (credential helper or SSH agent); the plugin never sees or stores them.
+## License
 
 MIT

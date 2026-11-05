@@ -16,7 +16,6 @@ export interface StatsViewState extends Record<string, unknown> {
 	weeks: number;
 }
 
-const SVG_NS = "http://www.w3.org/2000/svg";
 const WEEK_OPTIONS = [13, 26, 52];
 const WEEKDAY_LABELS: Record<number, string> = { 0: "一", 2: "三", 4: "五", 6: "日" };
 
@@ -24,7 +23,7 @@ function svgEl<K extends keyof SVGElementTagNameMap>(
 	tag: K,
 	attrs: Record<string, string | number> = {}
 ): SVGElementTagNameMap[K] {
-	const el = document.createElementNS(SVG_NS, tag);
+	const el = createSvg(tag);
 	for (const [key, value] of Object.entries(attrs)) {
 		el.setAttribute(key, String(value));
 	}

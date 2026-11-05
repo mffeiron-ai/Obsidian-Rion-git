@@ -155,11 +155,11 @@
 	color: var(--text-muted);
 }
 
-.rion-git-file-badge.mod-M { color: #d7a12e; }
-.rion-git-file-badge.mod-U { color: #3ba55c; }
-.rion-git-file-badge.mod-A { color: #3ba55c; }
+.rion-git-file-badge.mod-M { color: var(--color-orange); }
+.rion-git-file-badge.mod-U { color: var(--color-green); }
+.rion-git-file-badge.mod-A { color: var(--color-green); }
 .rion-git-file-badge.mod-D { color: var(--text-error); }
-.rion-git-file-badge.mod-R { color: #4a9eda; }
+.rion-git-file-badge.mod-R { color: var(--color-blue); }
 .rion-git-file-badge.mod-! { color: var(--text-error); }
 
 .rion-git-file-name {
@@ -323,7 +323,7 @@
 }
 
 .rion-git-add {
-	color: #3ba55c;
+	color: var(--color-green);
 }
 
 .rion-git-del {
@@ -347,10 +347,12 @@
 
 .rion-git-diff-line.is-add {
 	background: rgba(60, 180, 100, 0.16);
+	background: color-mix(in srgb, var(--color-green) 16%, transparent);
 }
 
 .rion-git-diff-line.is-del {
 	background: rgba(220, 80, 80, 0.16);
+	background: color-mix(in srgb, var(--color-red) 16%, transparent);
 }
 
 .rion-git-diff-line.is-hunk {
@@ -514,7 +516,7 @@
 }
 
 .rion-git-line-series.series-lines { stroke: var(--interactive-accent); }
-.rion-git-line-series.series-files { stroke: #3ba55c; }
+.rion-git-line-series.series-files { stroke: var(--color-green); }
 
 .rion-git-chart-legend {
 	display: flex;
@@ -533,4 +535,4 @@
 }
 
 .rion-git-chart-legend .dot.series-lines { background: var(--interactive-accent); }
-.rion-git-chart-legend .dot.series-files { background: #3ba55c; }
+.rion-git-chart-legend .dot.series-files { background: var(--color-green); }

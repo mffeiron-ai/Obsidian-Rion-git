@@ -28,6 +28,12 @@ export function setIcon(el: HTMLElement, name: string): void {
 	el.innerHTML = `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
 }
 
+/** Obsidian 的全局辅助函数，预览时补一份最小实现。 */
+(globalThis as unknown as {
+	createSvg: (tag: string) => SVGElement;
+}).createSvg = (tag: string) =>
+	document.createElementNS("http://www.w3.org/2000/svg", tag);
+
 interface ElOptions {
 	cls?: string;
 	text?: string;

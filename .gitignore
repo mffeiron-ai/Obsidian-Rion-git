@@ -5,10 +5,12 @@ main.js
 main.js.map
 *.map
 
-# Obsidian 运行时数据
+# 本地配置 / 运行时数据
+dev.local.json
 data.json
 
-# 系统文件
+# 编辑器与系统文件
+.vscode/
 .DS_Store
 Thumbs.db
 

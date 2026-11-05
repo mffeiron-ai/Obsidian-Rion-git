@@ -112,9 +112,6 @@ export default class RionGitPlugin extends Plugin {
 	onunload(): void {
 		this.autoCommit?.dispose();
 		this.watcher?.dispose();
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE_RION_GIT);
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE_RION_GIT_DIFF);
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE_RION_GIT_STATS);
 	}
 
 	private get ctx(): GitContext {
@@ -418,7 +415,7 @@ export default class RionGitPlugin extends Plugin {
 	}
 
 	/** 定时提交入口（只有 autoCommitMode === "interval" 时会被调度）。 */
-	async runAutoCommit(reason: string): Promise<void> {
+	async runAutoCommit(): Promise<void> {
 		await this.queue.add(async () => {
 			if (this.settings.autoCommitMode !== "interval") return;
 			if (Date.now() < this.autoCooldownUntil) return;
@@ -431,7 +428,7 @@ export default class RionGitPlugin extends Plugin {
 				return;
 			}
 
-			await this.commitSilently(reason);
+			await this.commitSilently();
 		});
 	}
 
@@ -446,7 +443,7 @@ export default class RionGitPlugin extends Plugin {
 			settings.smartFileThreshold > 0 &&
 			status.files.length >= settings.smartFileThreshold
 		) {
-			await this.commitSilently(`改动 ${status.files.length} 个文件`);
+			await this.commitSilently();
 			return;
 		}
 
@@ -458,12 +455,10 @@ export default class RionGitPlugin extends Plugin {
 		const lines = await countChangedLines(this.ctx, untracked);
 		if (lines < settings.smartLineThreshold) return;
 
-		await this.commitSilently(`改动 ${lines} 行`);
+		await this.commitSilently();
 	}
 
-	private async commitSilently(trigger: string): Promise<void> {
-		console.debug(`[Rion Git] 自动提交（${trigger}）`);
-
+	private async commitSilently(): Promise<void> {
 		const result = await gitCommitAll(
 			this.ctx,
 			formatCommitMessage(this.settings.commitMessageTemplate)

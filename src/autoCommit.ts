@@ -20,7 +20,7 @@ export class AutoCommitManager {
 		if (autoCommitMode !== "interval" || autoCommitInterval <= 0) return;
 
 		this.intervalId = window.setInterval(
-			() => void this.plugin.runAutoCommit("定时"),
+			() => void this.plugin.runAutoCommit(),
 			autoCommitInterval * 60_000
 		);
 		this.plugin.registerInterval(this.intervalId);
