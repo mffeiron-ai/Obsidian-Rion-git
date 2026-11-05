@@ -21,12 +21,14 @@ import {
 } from "./git/ops";
 import { detectRepo } from "./git/repo";
 import { readStatus } from "./git/status";
+import { countChangedLines } from "./git/stats";
 import {
 	DEFAULT_SETTINGS,
 	formatCommitMessage,
+	normalizeSettings,
 	RionGitSettingTab,
 } from "./settings";
-import type { RionGitSettings } from "./settings";
+import type { AutoCommitMode, RionGitSettings } from "./settings";
 import type { CommitFile, FileChange, GitContext, LogEntry, RepoStatus } from "./types";
 import { ChangesModal } from "./ui/changesModal";
 import { ConfirmModal } from "./ui/confirmModal";
@@ -54,6 +56,7 @@ export default class RionGitPlugin extends Plugin {
 	private autoCommit: AutoCommitManager | null = null;
 	private watcher: VaultWatcher | null = null;
 	private autoCooldownUntil = 0;
+	private lastActiveMode: AutoCommitMode = "interval";
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -111,19 +114,10 @@ export default class RionGitPlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		const stored = (await this.loadData()) ?? {};
-		const settings = { ...DEFAULT_SETTINGS };
-		const target = settings as Record<string, unknown>;
-
-		// 只接受当前版本仍然存在的键，避免旧版本遗留的设置项被反复写回。
-		for (const key of Object.keys(DEFAULT_SETTINGS)) {
-			const value = stored[key];
-			if (value !== undefined && typeof value === typeof target[key]) {
-				target[key] = value;
-			}
+		this.settings = normalizeSettings(await this.loadData());
+		if (this.settings.autoCommitMode !== "off") {
+			this.lastActiveMode = this.settings.autoCommitMode;
 		}
-
-		this.settings = settings;
 	}
 
 	async saveSettings(): Promise<void> {
@@ -135,7 +129,13 @@ export default class RionGitPlugin extends Plugin {
 	}
 
 	async toggleAutoCommit(): Promise<void> {
-		this.settings.autoCommitEnabled = !this.settings.autoCommitEnabled;
+		if (this.settings.autoCommitMode === "off") {
+			this.settings.autoCommitMode = this.lastActiveMode;
+		} else {
+			this.lastActiveMode = this.settings.autoCommitMode;
+			this.settings.autoCommitMode = "off";
+		}
+
 		await this.saveSettings();
 		this.applyAutoSettings();
 		this.refreshViews();
@@ -337,6 +337,7 @@ export default class RionGitPlugin extends Plugin {
 			this.lastStatus = await readStatus(this.ctx);
 			this.statusBar?.update(this.lastStatus);
 			this.refreshViews();
+			await this.maybeSmartCommit(this.lastStatus);
 		});
 	}
 
@@ -391,12 +392,10 @@ export default class RionGitPlugin extends Plugin {
 		return ok;
 	}
 
-	/** 自动提交入口：成功时静默，只更新界面；失败则进入冷却期，避免反复弹窗。 */
+	/** 定时提交入口（只有 autoCommitMode === "interval" 时会被调度）。 */
 	async runAutoCommit(reason: string): Promise<void> {
-		console.debug(`[Rion Git] 自动提交触发（${reason}）`);
-
 		await this.queue.add(async () => {
-			if (!this.settings.autoCommitEnabled) return;
+			if (this.settings.autoCommitMode !== "interval") return;
 			if (Date.now() < this.autoCooldownUntil) return;
 
 			const detection = await detectRepo(this.ctx);
@@ -407,30 +406,62 @@ export default class RionGitPlugin extends Plugin {
 				return;
 			}
 
-			const result = await gitCommitAll(
-				this.ctx,
-				formatCommitMessage(this.settings.commitMessageTemplate)
-			);
-			if (!result.ok) {
-				this.autoCooldownUntil = Date.now() + AUTO_RETRY_COOLDOWN_MS;
-				new Notice(
-					`Rion Git 自动提交失败：${result.message}（5 分钟内不再重试）`,
-					8000
-				);
-				await this.refreshInQueue();
-				return;
-			}
-
-			if ((result.count ?? 0) > 0 && this.settings.autoPush) {
-				const pushed = await gitPush(this.ctx);
-				if (!pushed.ok) {
-					this.autoCooldownUntil = Date.now() + AUTO_RETRY_COOLDOWN_MS;
-					new Notice(`Rion Git 自动推送失败：${pushed.message}`, 8000);
-				}
-			}
-
-			await this.refreshInQueue();
+			await this.commitSilently(reason);
 		});
+	}
+
+	/** 智能提交：改动文件数或改动行数达到阈值时触发，与定时模式互斥。 */
+	private async maybeSmartCommit(status: RepoStatus): Promise<void> {
+		const settings = this.settings;
+		if (settings.autoCommitMode !== "smart") return;
+		if (status.files.length === 0) return;
+		if (Date.now() < this.autoCooldownUntil) return;
+
+		if (
+			settings.smartFileThreshold > 0 &&
+			status.files.length >= settings.smartFileThreshold
+		) {
+			await this.commitSilently(`改动 ${status.files.length} 个文件`);
+			return;
+		}
+
+		if (settings.smartLineThreshold <= 0) return;
+
+		const untracked = status.files
+			.filter((file) => file.index === "?" && file.worktree === "?")
+			.map((file) => file.path);
+		const lines = await countChangedLines(this.ctx, untracked);
+		if (lines < settings.smartLineThreshold) return;
+
+		await this.commitSilently(`改动 ${lines} 行`);
+	}
+
+	private async commitSilently(trigger: string): Promise<void> {
+		console.debug(`[Rion Git] 自动提交（${trigger}）`);
+
+		const result = await gitCommitAll(
+			this.ctx,
+			formatCommitMessage(this.settings.commitMessageTemplate)
+		);
+		if (!result.ok) {
+			this.autoCooldownUntil = Date.now() + AUTO_RETRY_COOLDOWN_MS;
+			new Notice(
+				`Rion Git 自动提交失败：${result.message}（5 分钟内不再重试）`,
+				8000
+			);
+			await this.refreshInQueue();
+			return;
+		}
+
+		if ((result.count ?? 0) > 0 && this.settings.autoPush) {
+			const pushed = await gitPush(this.ctx);
+			if (!pushed.ok) {
+				this.autoCooldownUntil = Date.now() + AUTO_RETRY_COOLDOWN_MS;
+				new Notice(`Rion Git 自动推送失败：${pushed.message}`, 8000);
+			}
+		}
+
+		await this.refreshInQueue();
 	}
 
 	private async refreshInQueue(): Promise<void> {

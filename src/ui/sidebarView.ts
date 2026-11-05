@@ -16,10 +16,28 @@ interface SectionAction {
 }
 
 function autoSummary(settings: RionGitSettings): string {
-	if (!settings.autoCommitEnabled || settings.autoCommitInterval <= 0) {
-		return "自动提交：关闭";
+	const push = settings.autoPush ? "，并自动推送" : "";
+
+	if (settings.autoCommitMode === "interval") {
+		return settings.autoCommitInterval > 0
+			? `自动提交：每 ${settings.autoCommitInterval} 分钟${push}`
+			: "自动提交：关闭";
 	}
-	return `自动提交：每 ${settings.autoCommitInterval} 分钟${settings.autoPush ? "，并自动推送" : ""}`;
+
+	if (settings.autoCommitMode === "smart") {
+		const parts: string[] = [];
+		if (settings.smartFileThreshold > 0) {
+			parts.push(`≥${settings.smartFileThreshold} 个文件`);
+		}
+		if (settings.smartLineThreshold > 0) {
+			parts.push(`≥${settings.smartLineThreshold} 行`);
+		}
+		return parts.length > 0
+			? `自动提交：${parts.join(" 或 ")}${push}`
+			: "自动提交：关闭";
+	}
+
+	return "自动提交：关闭";
 }
 
 function changeBadge(change: FileChange): string {
@@ -181,7 +199,7 @@ export class RionGitView extends ItemView {
 	private renderChangesSection(el: HTMLElement): void {
 		const status = this.plugin.lastStatus;
 		const files = status?.files ?? [];
-		const auto = this.plugin.settings.autoCommitEnabled;
+		const auto = this.plugin.settings.autoCommitMode !== "off";
 
 		const body = this.createSection(
 			el,

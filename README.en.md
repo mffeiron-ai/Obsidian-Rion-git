@@ -17,7 +17,7 @@ Desktop only. It drives the Git you already have installed.
 | Per-file actions | Hover a file row to reveal "commit this file" and "discard changes" |
 | History | Latest 30 commits; expand one to list its files, click a file to see that commit's diff |
 | Push / pull | One click, with automatic upstream setup on first push |
-| Scheduled auto-commit | Commits at a fixed interval, toggleable from the panel |
+| Smart auto-commit | Commits when changes reach a file-count or line-count threshold |
 | Status bar | Always-visible change count and operation state; click to open the panel |
 
 ## Interface
@@ -69,12 +69,19 @@ Use `⬇` (pull) and `⬆` (push) in the History section header, or the equivale
 
 The first push sets up tracking automatically via `push -u origin <branch>`.
 
-### Scheduled auto-commit
+### Auto-commit
 
-Defaults to every 10 minutes. The `⚡` icon in the panel is the master switch:
+Three mutually exclusive modes:
 
-- `⚡` highlighted — auto-commit on
-- `⚡` dimmed — auto-commit off, manual only
+| Mode | Trigger |
+|---|---|
+| Off | Manual commits only |
+| Interval | Every N minutes (default 10) |
+| Smart | When changes reach a threshold: **≥ N files** or **≥ N lines** |
+
+Either smart threshold can be set to 0 to ignore that dimension; setting both to 0 is the same as off. Line counts include additions and deletions, and untracked new files contribute their own line count.
+
+The `⚡` icon in the panel is a shortcut toggle: highlighted means on, and clicking cycles between "off" and the mode you used last.
 
 Successful auto-commits are silent; only the status bar and panel update.
 
@@ -95,8 +102,10 @@ Settings → Community plugins → Rion Git
 |---|---|---|
 | Git executable | `git` | If Obsidian launched from a shortcut can't find git, use an absolute path such as `C:\Program Files\Git\cmd\git.exe` |
 | Commit message template | `vault backup: {{date}}` | `{{date}}` becomes `YYYY-MM-DD HH:mm:ss` |
-| Enable auto-commit | On | Master switch |
-| Auto-commit interval | 10 min | Set to 0 to disable scheduled commits |
+| Auto-commit mode | Interval | Off / Interval / Smart — mutually exclusive |
+| Auto-commit interval | 10 min | Interval mode only |
+| Smart: changed-files threshold | 5 | Smart mode only; 0 = ignore file count |
+| Smart: changed-lines threshold | 200 | Smart mode only; 0 = ignore line count |
 | Push after auto-commit | Off | Requires a configured remote; backs off 5 minutes after a failure |
 | Open panel on startup | On | Opens the panel in the right sidebar when Obsidian starts |
 | Show status bar | On | Takes effect after reloading the plugin |

@@ -283,27 +283,25 @@ export interface RepoStatus {
 ```mermaid
 stateDiagram-v2
     [*] --> Idle
-    Idle --> Committing: 定时器触发（autoCommitInterval 分钟）
+    Idle --> Committing: 定时器触发（interval 模式）
+    Idle --> Committing: 改动达到阈值（smart 模式）
     Committing --> Pushing: 有改动且开启自动推送
     Committing --> Idle: 无改动则跳过
     Pushing --> Idle
 ```
 
-> **决策记录**：最初方案包含「文件变更后自动提交（vault 事件 + debounce）」，实现后评估移除 —— 定时提交已覆盖备份需求，事件监听用于提交只会带来噪音提交和额外开销。**提交仍然只由定时器触发**。但 vault 事件保留用于「界面及时刷新」（见 `vaultWatcher.ts`），否则改动后要手动刷新才能看到。
+> **决策记录**：最初方案包含「文件变更后自动提交（vault 事件 + debounce）」，评估后移除——逐次变更提交会产生大量噪音。后来改为三态模型，把「何时提交」交给用户：关闭 / 定时 / 智能阈值。vault 事件仍然只用于「界面及时刷新」（见 `vaultWatcher.ts`），不做提交判定。
 
 规则：
 
-1. **唯一触发器是定时器**，通过 `registerInterval` 注册；设置变化时先 `clearInterval` 再重建，避免热重载后多份定时器叠加。
-
-2. **总开关**：`autoCommitEnabled` 为 false 或 `autoCommitInterval <= 0` 时不注册定时器。
-
+1. **三种模式互斥**，由 `autoCommitMode: "off" | "interval" | "smart"` 决定：
+   - `interval`：`registerInterval` 注册定时器，设置变化时先 `clearInterval` 再重建，避免热重载后多份定时器叠加；
+   - `smart`：不注册定时器，在每次状态刷新（vault 事件 debounce 700ms、或 30 秒兜底轮询）后评估阈值。
+2. **智能阈值**：`smartFileThreshold`（改动文件数）与 `smartLineThreshold`（新增+删除行数）任一满足即提交，先判文件数（只需 status），不满足再跑 `git diff --numstat HEAD` 统计行数；未跟踪文件不在 numstat 里，单独读取其行数（单文件 ≤512KB、最多 50 个）。阈值为 0 表示该维度不参与判断。
 3. **空提交跳过**：执行前先跑 `status`，无改动直接返回，**不要**用 `--allow-empty`。
-
 4. **消息模板**：默认 `vault backup: {{date}}`。日期格式化用自带的小函数而非 Obsidian 的 `moment`（后者的类型是命名空间对象，`typeof moment` 不可调用）。
-
 5. **失败退避**：本地提交失败（如 identity 未配置）后进入 5 分钟冷却并提示一次，避免刷屏。
-
-6. **界面及时刷新**：`vaultWatcher.ts` 监听 `modify`/`create`/`delete`/`rename`，过滤 `.git/`、`.trash/`、`.obsidian/plugins/`、`workspace*.json` 后 debounce 700ms，只调用 `refreshStatusOnly()`（不读历史、不提交）。另保留 30 秒轮询作为「从终端操作 git」时的兜底。
+6. **界面及时刷新**：`vaultWatcher.ts` 监听 `modify`/`create`/`delete`/`rename`，过滤 `.git/`、`.trash/`、`.obsidian/plugins/`、`workspace*.json` 后 debounce 700ms，只调用 `refreshStatusOnly()`；状态刷新后若为 smart 模式则顺带评估阈值。另保留 30 秒轮询作为「从终端操作 git」时的兜底。
 
 ### 5.7 `src/git/ops.ts` — 操作组合
 
@@ -374,8 +372,10 @@ sequenceDiagram
 | `commitMessageTemplate` | string | `vault backup: {{date}}` | 支持 `{{date}}` |
 | `showStatusBar` | boolean | `true` | 是否显示底部状态栏 |
 | `autoOpenPanel` | boolean | `true` | 启动后自动在右侧边栏打开面板 |
-| `autoCommitEnabled` | boolean | `true` | 自动提交总开关 |
-| `autoCommitInterval` | number(min) | `10` | 0 = 关闭定时提交 |
+| `autoCommitMode` | `"off" \| "interval" \| "smart"` | `"interval"` | 自动提交方式，三者互斥 |
+| `autoCommitInterval` | number(min) | `10` | 仅 interval 模式生效 |
+| `smartFileThreshold` | number | `5` | 智能模式：改动文件数阈值，0 = 不判断 |
+| `smartLineThreshold` | number | `200` | 智能模式：改动行数阈值，0 = 不判断 |
 | `autoPush` | boolean | `false` | 自动提交后推送 |
 
 ---

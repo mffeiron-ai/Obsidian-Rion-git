@@ -16,8 +16,8 @@ export class AutoCommitManager {
 			this.intervalId = null;
 		}
 
-		const { autoCommitEnabled, autoCommitInterval } = this.plugin.settings;
-		if (!autoCommitEnabled || autoCommitInterval <= 0) return;
+		const { autoCommitMode, autoCommitInterval } = this.plugin.settings;
+		if (autoCommitMode !== "interval" || autoCommitInterval <= 0) return;
 
 		this.intervalId = window.setInterval(
 			() => void this.plugin.runAutoCommit("定时"),
