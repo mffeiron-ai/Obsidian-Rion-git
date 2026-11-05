@@ -69,8 +69,8 @@ export class DiffView extends ItemView {
 		el.empty();
 		el.addClass("rion-git-diff-view");
 
-		const header = el.createEl("div", { cls: "rion-git-diff-header" });
-		const title = header.createEl("span", { cls: "rion-git-diff-title" });
+		const header = el.createDiv({ cls: "rion-git-diff-header" });
+		const title = header.createSpan({ cls: "rion-git-diff-title" });
 		title.createSpan({ text: this.filePath || "未选择文件" });
 		if (this.commitHash) {
 			title.createSpan({
@@ -79,9 +79,9 @@ export class DiffView extends ItemView {
 			});
 		}
 
-		const meta = header.createEl("div", { cls: "rion-git-diff-meta" });
+		const meta = header.createDiv({ cls: "rion-git-diff-meta" });
 
-		const actions = header.createEl("div", { cls: "rion-git-diff-actions" });
+		const actions = header.createDiv({ cls: "rion-git-diff-actions" });
 		const addButton = (icon: string, label: string, handler: () => void): void => {
 			const button = actions.createEl("button", { cls: "clickable-icon" });
 			button.setAttribute("aria-label", label);
@@ -95,8 +95,8 @@ export class DiffView extends ItemView {
 			addButton("rotate-ccw", "撤销修改", () => void this.discard());
 		}
 
-		const body = el.createEl("div", { cls: "rion-git-diff" });
-		body.createEl("div", { cls: "rion-git-empty", text: "读取中…" });
+		const body = el.createDiv({ cls: "rion-git-diff" });
+		body.createDiv({ cls: "rion-git-empty", text: "读取中…" });
 
 		if (!this.filePath) return;
 
@@ -105,22 +105,22 @@ export class DiffView extends ItemView {
 
 		body.empty();
 
-		meta.createEl("span", { cls: "rion-git-add", text: `+${data.stats.additions}` });
-		meta.createEl("span", { cls: "rion-git-del", text: `-${data.stats.deletions}` });
+		meta.createSpan({ cls: "rion-git-add", text: `+${data.stats.additions}` });
+		meta.createSpan({ cls: "rion-git-del", text: `-${data.stats.deletions}` });
 
 		if (data.note) {
-			body.createEl("div", { cls: "rion-git-empty", text: data.note });
+			body.createDiv({ cls: "rion-git-empty", text: data.note });
 		}
 
 		for (const line of data.lines.slice(0, 5000)) {
-			body.createEl("div", {
+			body.createDiv({
 				cls: `rion-git-diff-line is-${line.kind}`,
 				text: line.text,
 			});
 		}
 
 		if (data.lines.length > 5000) {
-			body.createEl("div", {
+			body.createDiv({
 				cls: "rion-git-empty",
 				text: `还有 ${data.lines.length - 5000} 行未显示…`,
 			});

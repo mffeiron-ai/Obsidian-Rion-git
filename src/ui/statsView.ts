@@ -101,8 +101,8 @@ export class StatsView extends ItemView {
 
 		this.renderHeader(el);
 
-		const body = el.createEl("div", { cls: "rion-git-stats-body" });
-		body.createEl("div", { cls: "rion-git-empty", text: "统计中…" });
+		const body = el.createDiv({ cls: "rion-git-stats-body" });
+		body.createDiv({ cls: "rion-git-empty", text: "统计中…" });
 
 		const commits = await this.plugin.loadHistoryStats();
 		if (token !== this.renderToken) return;
@@ -118,30 +118,30 @@ export class StatsView extends ItemView {
 		body.empty();
 
 		if (totalCommits === 0) {
-			body.createEl("div", {
+			body.createDiv({
 				cls: "rion-git-empty",
 				text: "这段时间没有提交记录。",
 			});
 			return;
 		}
 
-		body.createEl("div", {
+		body.createDiv({
 			cls: "rion-git-stats-summary",
 			text: `近 ${this.weeks} 周：${totalCommits} 次提交 · ${totalLines} 行改动 · ${totalFiles} 个文件`,
 		});
 
-		body.createEl("div", { cls: "rion-git-stats-section", text: "提交日历" });
-		const heatmap = body.createEl("div", { cls: "rion-git-heatmap" });
+		body.createDiv({ cls: "rion-git-stats-section", text: "提交日历" });
+		const heatmap = body.createDiv({ cls: "rion-git-heatmap" });
 		this.renderHeatmap(heatmap, daily);
 
-		body.createEl("div", { cls: "rion-git-stats-section", text: "改动趋势（按周）" });
-		const chart = body.createEl("div", { cls: "rion-git-line-chart" });
+		body.createDiv({ cls: "rion-git-stats-section", text: "改动趋势（按周）" });
+		const chart = body.createDiv({ cls: "rion-git-line-chart" });
 		this.renderLineChart(chart, aggregateByWeek(daily));
 	}
 
 	private renderHeader(el: HTMLElement): void {
-		const header = el.createEl("div", { cls: "rion-git-stats-header" });
-		header.createEl("span", { cls: "rion-git-stats-title", text: "历史统计" });
+		const header = el.createDiv({ cls: "rion-git-stats-header" });
+		header.createSpan({ cls: "rion-git-stats-title", text: "历史统计" });
 
 		const select = header.createEl("select", { cls: "dropdown" });
 		for (const weeks of WEEK_OPTIONS) {
@@ -239,12 +239,12 @@ export class StatsView extends ItemView {
 
 		container.appendChild(svg);
 
-		const legend = container.createEl("div", { cls: "rion-git-heatmap-legend" });
-		legend.createEl("span", { text: "少" });
+		const legend = container.createDiv({ cls: "rion-git-heatmap-legend" });
+		legend.createSpan({ text: "少" });
 		for (let level = 0; level <= 4; level++) {
-			legend.createEl("span", { cls: `rion-git-heat-cell level-${level}` });
+			legend.createSpan({ cls: `rion-git-heat-cell level-${level}` });
 		}
-		legend.createEl("span", { text: "多" });
+		legend.createSpan({ text: "多" });
 	}
 
 	private renderLineChart(container: HTMLElement, weeks: WeeklyStat[]): void {
@@ -351,10 +351,10 @@ export class StatsView extends ItemView {
 
 		container.appendChild(svg);
 
-		const legend = container.createEl("div", { cls: "rion-git-chart-legend" });
-		legend.createEl("span", { cls: "dot series-lines" });
-		legend.createEl("span", { text: "提交行数（左轴）" });
-		legend.createEl("span", { cls: "dot series-files" });
-		legend.createEl("span", { text: "提交文件数（右轴）" });
+		const legend = container.createDiv({ cls: "rion-git-chart-legend" });
+		legend.createSpan({ cls: "dot series-lines" });
+		legend.createSpan({ text: "提交行数（左轴）" });
+		legend.createSpan({ cls: "dot series-files" });
+		legend.createSpan({ text: "提交文件数（右轴）" });
 	}
 }

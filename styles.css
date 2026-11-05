@@ -346,12 +346,10 @@
 }
 
 .rion-git-diff-line.is-add {
-	background: rgba(60, 180, 100, 0.16);
 	background: color-mix(in srgb, var(--color-green) 16%, transparent);
 }
 
 .rion-git-diff-line.is-del {
-	background: rgba(220, 80, 80, 0.16);
 	background: color-mix(in srgb, var(--color-red) 16%, transparent);
 }
 

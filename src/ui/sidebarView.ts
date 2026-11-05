@@ -105,7 +105,7 @@ export class RionGitView extends ItemView {
 		el.addClass("rion-git-sidebar");
 
 		if (this.plugin.lastError) {
-			el.createEl("div", { cls: "rion-git-error", text: this.plugin.lastError });
+			el.createDiv({ cls: "rion-git-error", text: this.plugin.lastError });
 		}
 
 		this.renderCommitBox(el);
@@ -115,7 +115,7 @@ export class RionGitView extends ItemView {
 
 	private renderCommitBox(el: HTMLElement): void {
 		const status = this.plugin.lastStatus;
-		const box = el.createEl("div", { cls: "rion-git-commit-box" });
+		const box = el.createDiv({ cls: "rion-git-commit-box" });
 
 		const input = box.createEl("textarea", {
 			cls: "rion-git-message",
@@ -145,7 +145,7 @@ export class RionGitView extends ItemView {
 			void this.commit();
 		});
 
-		const actions = box.createEl("div", { cls: "rion-git-commit-actions" });
+		const actions = box.createDiv({ cls: "rion-git-commit-actions" });
 
 		const commitButton = actions.createEl("button", { cls: "mod-cta rion-git-commit-btn" });
 		setIcon(commitButton.createSpan({ cls: "rion-git-btn-icon" }), "check");
@@ -172,7 +172,7 @@ export class RionGitView extends ItemView {
 			menu.showAtMouseEvent(evt);
 		};
 
-		box.createEl("div", {
+		box.createDiv({
 			cls: "rion-git-auto-hint",
 			text: autoSummary(this.plugin.settings),
 		});
@@ -227,12 +227,12 @@ export class RionGitView extends ItemView {
 		if (!body) return;
 
 		if (!status) {
-			body.createEl("div", { cls: "rion-git-empty", text: "正在检测仓库…" });
+			body.createDiv({ cls: "rion-git-empty", text: "正在检测仓库…" });
 			return;
 		}
 
 		if (files.length === 0) {
-			body.createEl("div", { cls: "rion-git-empty", text: "工作区是干净的。" });
+			body.createDiv({ cls: "rion-git-empty", text: "工作区是干净的。" });
 			return;
 		}
 
@@ -245,7 +245,7 @@ export class RionGitView extends ItemView {
 		}
 
 		if (files.length > MAX_ROWS) {
-			body.createEl("div", {
+			body.createDiv({
 				cls: "rion-git-empty",
 				text: `还有 ${files.length - MAX_ROWS} 个文件未显示…`,
 			});
@@ -277,7 +277,7 @@ export class RionGitView extends ItemView {
 		if (!body) return;
 
 		if (log.length === 0) {
-			body.createEl("div", { cls: "rion-git-empty", text: "还没有提交记录。" });
+			body.createDiv({ cls: "rion-git-empty", text: "还没有提交记录。" });
 			return;
 		}
 
@@ -286,21 +286,21 @@ export class RionGitView extends ItemView {
 
 	private renderCommitRow(parent: HTMLElement, entry: LogEntry): void {
 		const expanded = this.expandedCommits.has(entry.hash);
-		const item = parent.createEl("div", { cls: "rion-git-commit-item" });
+		const item = parent.createDiv({ cls: "rion-git-commit-item" });
 
-		const head = item.createEl("div", { cls: "rion-git-commit-head" });
-		head.createEl("span", { cls: "rion-git-commit-dot" });
+		const head = item.createDiv({ cls: "rion-git-commit-head" });
+		head.createSpan({ cls: "rion-git-commit-dot" });
 
-		const subject = head.createEl("span", {
+		const subject = head.createSpan({
 			cls: "rion-git-commit-subject",
 			text: entry.subject,
 		});
 		subject.setAttribute("title", entry.subject);
 
 		if (entry.refs.length > 0) {
-			const refs = head.createEl("span", { cls: "rion-git-refs" });
+			const refs = head.createSpan({ cls: "rion-git-refs" });
 			for (const ref of entry.refs) {
-				refs.createEl("span", { cls: "rion-git-ref", text: ref });
+				refs.createSpan({ cls: "rion-git-ref", text: ref });
 			}
 		}
 
@@ -309,14 +309,14 @@ export class RionGitView extends ItemView {
 		if (!expanded) return;
 
 		const files = this.commitFiles.get(entry.hash);
-		const filesEl = item.createEl("div", { cls: "rion-git-commit-files" });
+		const filesEl = item.createDiv({ cls: "rion-git-commit-files" });
 
 		if (!files) {
-			filesEl.createEl("div", { cls: "rion-git-empty", text: "读取中…" });
+			filesEl.createDiv({ cls: "rion-git-empty", text: "读取中…" });
 			return;
 		}
 		if (files.length === 0) {
-			filesEl.createEl("div", { cls: "rion-git-empty", text: "没有文件变更。" });
+			filesEl.createDiv({ cls: "rion-git-empty", text: "没有文件变更。" });
 			return;
 		}
 
@@ -351,13 +351,13 @@ export class RionGitView extends ItemView {
 		actions?: { onOpen: () => void; onCommit?: () => void; onDiscard?: () => void }
 	): void {
 		const { name, dir } = splitPath(path);
-		const row = parent.createEl("div", { cls: "rion-git-file-row" });
+		const row = parent.createDiv({ cls: "rion-git-file-row" });
 		row.setAttribute("title", tooltip);
-		row.createEl("span", { cls: `rion-git-file-badge mod-${badge}`, text: badge });
-		row.createEl("span", { cls: "rion-git-file-name", text: name });
+		row.createSpan({ cls: `rion-git-file-badge mod-${badge}`, text: badge });
+		row.createSpan({ cls: "rion-git-file-name", text: name });
 
-		const end = row.createEl("div", { cls: "rion-git-file-end" });
-		if (dir) end.createEl("span", { cls: "rion-git-file-dir", text: dir });
+		const end = row.createDiv({ cls: "rion-git-file-end" });
+		if (dir) end.createSpan({ cls: "rion-git-file-dir", text: dir });
 
 		if (!actions) return;
 
@@ -366,7 +366,7 @@ export class RionGitView extends ItemView {
 
 		if (!actions.onCommit && !actions.onDiscard) return;
 
-		const buttons = end.createEl("div", { cls: "rion-git-file-actions" });
+		const buttons = end.createDiv({ cls: "rion-git-file-actions" });
 		const addIcon = (icon: string, label: string, handler?: () => void): void => {
 			if (!handler) return;
 			const button = buttons.createEl("button", { cls: "clickable-icon" });
@@ -391,19 +391,19 @@ export class RionGitView extends ItemView {
 		actions: SectionAction[]
 	): HTMLElement | null {
 		const isCollapsed = this.collapsed.has(key);
-		const section = el.createEl("div", { cls: "rion-git-section" });
-		const header = section.createEl("div", { cls: "rion-git-section-header" });
+		const section = el.createDiv({ cls: "rion-git-section" });
+		const header = section.createDiv({ cls: "rion-git-section-header" });
 
 		setIcon(
-			header.createEl("span", { cls: "rion-git-chevron" }),
+			header.createSpan({ cls: "rion-git-chevron" }),
 			isCollapsed ? "chevron-right" : "chevron-down"
 		);
-		header.createEl("span", { cls: "rion-git-section-title", text: title });
+		header.createSpan({ cls: "rion-git-section-title", text: title });
 		if (badge !== undefined) {
-			header.createEl("span", { cls: "rion-git-badge", text: badge });
+			header.createSpan({ cls: "rion-git-badge", text: badge });
 		}
 
-		const actionsEl = header.createEl("div", { cls: "rion-git-section-actions" });
+		const actionsEl = header.createDiv({ cls: "rion-git-section-actions" });
 		for (const action of actions) {
 			const button = actionsEl.createEl("button", { cls: "clickable-icon" });
 			button.setAttribute("aria-label", action.label);
@@ -424,7 +424,7 @@ export class RionGitView extends ItemView {
 
 		return isCollapsed
 			? null
-			: section.createEl("div", { cls: "rion-git-section-body" });
+			: section.createDiv({ cls: "rion-git-section-body" });
 	}
 
 	private openMoreMenu(evt: MouseEvent): void {

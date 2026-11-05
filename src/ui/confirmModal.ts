@@ -17,7 +17,7 @@ export class ConfirmModal extends Modal {
 		contentEl.createEl("h3", { text: "确认操作" });
 		contentEl.createEl("p", { text: this.message });
 
-		const actions = contentEl.createEl("div", { cls: "rion-git-modal-actions" });
+		const actions = contentEl.createDiv({ cls: "rion-git-modal-actions" });
 
 		const cancel = actions.createEl("button", { text: "取消" });
 		cancel.onclick = () => this.close();

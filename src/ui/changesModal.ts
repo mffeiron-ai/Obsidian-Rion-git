@@ -25,14 +25,14 @@ export class ChangesModal extends Modal {
 			cls: "rion-git-branch",
 		});
 
-		const list = contentEl.createEl("div", { cls: "rion-git-file-list" });
+		const list = contentEl.createDiv({ cls: "rion-git-file-list" });
 		if (this.status.files.length === 0) {
 			list.createEl("p", { text: "工作区是干净的。" });
 		}
 		for (const file of this.status.files.slice(0, MAX_ROWS)) {
-			const row = list.createEl("div", { cls: "rion-git-file-row" });
-			row.createEl("span", { text: statusLabel(file), cls: "rion-git-file-state" });
-			row.createEl("span", { text: file.path, cls: "rion-git-file-path" });
+			const row = list.createDiv({ cls: "rion-git-file-row" });
+			row.createSpan({ text: statusLabel(file), cls: "rion-git-file-state" });
+			row.createSpan({ text: file.path, cls: "rion-git-file-path" });
 		}
 		if (this.status.files.length > MAX_ROWS) {
 			list.createEl("p", {
@@ -40,7 +40,7 @@ export class ChangesModal extends Modal {
 			});
 		}
 
-		const actions = contentEl.createEl("div", { cls: "rion-git-modal-actions" });
+		const actions = contentEl.createDiv({ cls: "rion-git-modal-actions" });
 		const addButton = (label: string, action: () => void): void => {
 			const button = actions.createEl("button", { text: label });
 			button.onclick = () => {

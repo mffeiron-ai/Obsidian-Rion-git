@@ -534,11 +534,12 @@ export default class RionGitPlugin extends Plugin {
 		const adapter = this.app.vault.adapter;
 		if (await adapter.exists(".gitignore")) return;
 
+		const configDir = this.app.vault.configDir;
 		await adapter.write(
 			".gitignore",
 			[
-				".obsidian/workspace.json",
-				".obsidian/workspace-mobile.json",
+				`${configDir}/workspace.json`,
+				`${configDir}/workspace-mobile.json`,
 				".trash/",
 				"",
 			].join("\n")

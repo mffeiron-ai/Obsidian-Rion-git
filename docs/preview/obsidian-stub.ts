@@ -72,6 +72,9 @@ if (!proto.createEl) {
 		createSpan(this: HTMLElement, options?: ElOptions | string) {
 			return (this as never as { createEl: (t: string, o?: unknown) => HTMLElement }).createEl("span", options);
 		},
+		createDiv(this: HTMLElement, options?: ElOptions | string) {
+			return (this as never as { createEl: (t: string, o?: unknown) => HTMLElement }).createEl("div", options);
+		},
 		empty(this: HTMLElement) {
 			while (this.firstChild) this.removeChild(this.firstChild);
 		},
